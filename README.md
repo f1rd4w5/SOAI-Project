@@ -34,6 +34,57 @@ vehicles.append(car2)
 car3 = Voertuig(3,5,3,'horizontaal',(200,0,100))
 vehicles.append(car3)
 
+def bezette_vakjes(lijst_voertuigen,selected_voertuig):
+    bezet = []
+    for car in lijst_voertuigen:
+        if car != selected_voertuig:
+            if car.oriëntatie == 'horizontaal':
+                bezet.append((car.x,car.y))
+                for i in range(car.lengte - 1):
+                    bezet.append((car.x + 1 + i,car.y))
+            else:
+                bezet.append((car.x,car.y))
+                for i in range(car.lengte - 1):
+                    bezet.append((car.x,car.y + 1 + i))
+    return bezet
+
+def teken_auto(vehicle):
+    if vehicle.oriëntatie == 'horizontaal':
+        pygame.draw.rect(screen,vehicle.color,((vehicle.x*vakje_size)+marge,(vehicle.y*vakje_size)+marge,vehicle.lengte*vakje_size,vakje_size),border_radius=5)
+        pygame.draw.rect(screen,(130,220,250),(((vehicle.x+vehicle.lengte)*vakje_size)+marge-(5*vakje_size/12),(vehicle.y*vakje_size)+marge+((vakje_size-(5*vakje_size/6))/2),vakje_size/3,5*vakje_size/6),border_radius=3)
+        if vehicle.lengte == 2:
+            pygame.draw.rect(screen,(64,64,64),((vehicle.x*vakje_size)+marge+(vakje_size/12),(vehicle.y*vakje_size)+marge-(vakje_size/24),vakje_size/2,vakje_size/8),border_radius=8)
+            pygame.draw.rect(screen,(64,64,64),((vehicle.x*vakje_size)+marge+(10*vakje_size/12),(vehicle.y*vakje_size)+marge-(vakje_size/24),vakje_size/2,vakje_size/8),border_radius=8)
+            pygame.draw.rect(screen,(64,64,64),((vehicle.x*vakje_size)+marge+(vakje_size/12),(vehicle.y*vakje_size)+marge+(22*vakje_size/24),vakje_size/2,vakje_size/8),border_radius=8)
+            pygame.draw.rect(screen,(64,64,64),((vehicle.x*vakje_size)+marge+(10*vakje_size/12),(vehicle.y*vakje_size)+marge+(22*vakje_size/24),vakje_size/2,vakje_size/8),border_radius=8)
+        else:
+            pygame.draw.rect(screen,(64,64,64),((vehicle.x*vakje_size)+marge+(vakje_size/2),(vehicle.y*vakje_size)+marge-(vakje_size/24),vakje_size/2,vakje_size/8),border_radius=8)
+            pygame.draw.rect(screen,(64,64,64),((vehicle.x*vakje_size)+marge+(22*vakje_size/12),(vehicle.y*vakje_size)+marge-(vakje_size/24),vakje_size/2,vakje_size/8),border_radius=8)
+            pygame.draw.rect(screen,(64,64,64),((vehicle.x*vakje_size)+marge+(vakje_size/2),(vehicle.y*vakje_size)+marge+(22*vakje_size/24),vakje_size/2,vakje_size/8),border_radius=8)
+            pygame.draw.rect(screen,(64,64,64),((vehicle.x*vakje_size)+marge+(22*vakje_size/12),(vehicle.y*vakje_size)+marge+(22*vakje_size/24),vakje_size/2,vakje_size/8),border_radius=8)
+    else:
+        pygame.draw.rect(screen,vehicle.color,((vehicle.x*vakje_size)+marge,(vehicle.y*vakje_size)+marge,vakje_size,vehicle.lengte*vakje_size),border_radius=5)
+        pygame.draw.rect(screen,(130,220,250),((vehicle.x*vakje_size)+marge+((vakje_size-(5*vakje_size/6))/2),(vehicle.y*vakje_size)+marge+(vakje_size/12),5*vakje_size/6,vakje_size/3),border_radius=3)
+        if vehicle.lengte == 2:
+            pygame.draw.rect(screen,(64,64,64),((vehicle.x*vakje_size)+marge-(vakje_size/24),(vehicle.y*vakje_size)+marge+(8*vakje_size/12),vakje_size/8,vakje_size/2),border_radius=8)
+            pygame.draw.rect(screen,(64,64,64),((vehicle.x*vakje_size)+marge-(vakje_size/24),(vehicle.y*vakje_size)+marge+(17*vakje_size/12),vakje_size/8,vakje_size/2),border_radius=8)
+            pygame.draw.rect(screen,(64,64,64),((vehicle.x*vakje_size)+marge+(22*vakje_size/24),(vehicle.y*vakje_size)+marge+(8*vakje_size/12),vakje_size/8,vakje_size/2),border_radius=8)
+            pygame.draw.rect(screen,(64,64,64),((vehicle.x*vakje_size)+marge+(22*vakje_size/24),(vehicle.y*vakje_size)+marge+(17*vakje_size/12),vakje_size/8,vakje_size/2),border_radius=8)
+        else:
+            pygame.draw.rect(screen,(64,64,64),((vehicle.x*vakje_size)+marge-(vakje_size/24),(vehicle.y*vakje_size)+marge+(8*vakje_size/12),vakje_size/8,vakje_size/2),border_radius=8)
+            pygame.draw.rect(screen,(64,64,64),((vehicle.x*vakje_size)+marge-(vakje_size/24),(vehicle.y*vakje_size)+marge+(2*vakje_size),vakje_size/8,vakje_size/2),border_radius=8)
+            pygame.draw.rect(screen,(64,64,64),((vehicle.x*vakje_size)+marge+(22*vakje_size/24),(vehicle.y*vakje_size)+marge+(8*vakje_size/12),vakje_size/8,vakje_size/2),border_radius=8)
+            pygame.draw.rect(screen,(64,64,64),((vehicle.x*vakje_size)+marge+(22*vakje_size/24),(vehicle.y*vakje_size)+marge+(2*vakje_size),vakje_size/8,vakje_size/2),border_radius=8)
+  
+def win_animatie():
+    pygame.draw.rect(screen,(0,250,0),(marge,marge,vakje_size*vakje_aantal,vakje_size*vakje_aantal))
+    font_size = 100
+    font = pygame.font.Font(None,size = font_size)
+    text = font.render("YOU WIN",True,(0,0,0))
+    locationX = (pixels/2) - (text.get_width()/2)
+    locationY = (pixels/2) - (text.get_height()/2)
+    screen.blit(text,dest = (locationX,locationY))
+
 running = True
 while running:
 
@@ -55,17 +106,7 @@ while running:
             
         if event.type == pygame.KEYDOWN:
             if selected_car:
-                bezet = []
-                for car in vehicles:
-                    if car != selected_car:
-                        if car.oriëntatie == 'horizontaal':
-                            bezet.append((car.x,car.y))
-                            for i in range(car.lengte - 1):
-                                bezet.append((car.x + 1 + i,car.y))
-                        else:
-                            bezet.append((car.x,car.y))
-                            for i in range(car.lengte - 1):
-                                bezet.append((car.x,car.y + 1 + i))
+                bezet = bezette_vakjes(vehicles,selected_car)
                 if event.key == pygame.K_RIGHT:
                     collision = False
                     for j in bezet:
@@ -108,45 +149,11 @@ while running:
             pygame.draw.rect(screen,(150,250,50),((selected_car.x*vakje_size)+marge-(vakje_size/12),(selected_car.y*vakje_size)+marge-(vakje_size/12),7*vakje_size/6,(selected_car.lengte*vakje_size)+(vakje_size/6)),border_radius=5)
     
     for car in vehicles:
-        if car.oriëntatie == 'horizontaal':
-            pygame.draw.rect(screen,car.color,((car.x*vakje_size)+marge,(car.y*vakje_size)+marge,car.lengte*vakje_size,vakje_size),border_radius=5)
-            pygame.draw.rect(screen,(130,220,250),(((car.x+car.lengte)*vakje_size)+marge-(5*vakje_size/12),(car.y*vakje_size)+marge+((vakje_size-(5*vakje_size/6))/2),vakje_size/3,5*vakje_size/6),border_radius=3)
-            if car.lengte == 2:
-                pygame.draw.rect(screen,(64,64,64),((car.x*vakje_size)+marge+(vakje_size/12),(car.y*vakje_size)+marge-(vakje_size/24),vakje_size/2,vakje_size/8),border_radius=8)
-                pygame.draw.rect(screen,(64,64,64),((car.x*vakje_size)+marge+(10*vakje_size/12),(car.y*vakje_size)+marge-(vakje_size/24),vakje_size/2,vakje_size/8),border_radius=8)
-                pygame.draw.rect(screen,(64,64,64),((car.x*vakje_size)+marge+(vakje_size/12),(car.y*vakje_size)+marge+(22*vakje_size/24),vakje_size/2,vakje_size/8),border_radius=8)
-                pygame.draw.rect(screen,(64,64,64),((car.x*vakje_size)+marge+(10*vakje_size/12),(car.y*vakje_size)+marge+(22*vakje_size/24),vakje_size/2,vakje_size/8),border_radius=8)
-            else:
-                pygame.draw.rect(screen,(64,64,64),((car.x*vakje_size)+marge+(vakje_size/2),(car.y*vakje_size)+marge-(vakje_size/24),vakje_size/2,vakje_size/8),border_radius=8)
-                pygame.draw.rect(screen,(64,64,64),((car.x*vakje_size)+marge+(22*vakje_size/12),(car.y*vakje_size)+marge-(vakje_size/24),vakje_size/2,vakje_size/8),border_radius=8)
-                pygame.draw.rect(screen,(64,64,64),((car.x*vakje_size)+marge+(vakje_size/2),(car.y*vakje_size)+marge+(22*vakje_size/24),vakje_size/2,vakje_size/8),border_radius=8)
-                pygame.draw.rect(screen,(64,64,64),((car.x*vakje_size)+marge+(22*vakje_size/12),(car.y*vakje_size)+marge+(22*vakje_size/24),vakje_size/2,vakje_size/8),border_radius=8)
-                
-        else:
-            pygame.draw.rect(screen,car.color,((car.x*vakje_size)+marge,(car.y*vakje_size)+marge,vakje_size,car.lengte*vakje_size),border_radius=5)
-            pygame.draw.rect(screen,(130,220,250),((car.x*vakje_size)+marge+((vakje_size-(5*vakje_size/6))/2),(car.y*vakje_size)+marge+(vakje_size/12),5*vakje_size/6,vakje_size/3),border_radius=3)
-            if car.lengte == 2:
-                pygame.draw.rect(screen,(64,64,64),((car.x*vakje_size)+marge-(vakje_size/24),(car.y*vakje_size)+marge+(8*vakje_size/12),vakje_size/8,vakje_size/2),border_radius=8)
-                pygame.draw.rect(screen,(64,64,64),((car.x*vakje_size)+marge-(vakje_size/24),(car.y*vakje_size)+marge+(17*vakje_size/12),vakje_size/8,vakje_size/2),border_radius=8)
-                pygame.draw.rect(screen,(64,64,64),((car.x*vakje_size)+marge+(22*vakje_size/24),(car.y*vakje_size)+marge+(8*vakje_size/12),vakje_size/8,vakje_size/2),border_radius=8)
-                pygame.draw.rect(screen,(64,64,64),((car.x*vakje_size)+marge+(22*vakje_size/24),(car.y*vakje_size)+marge+(17*vakje_size/12),vakje_size/8,vakje_size/2),border_radius=8)
-            else:
-                pygame.draw.rect(screen,(64,64,64),((car.x*vakje_size)+marge-(vakje_size/24),(car.y*vakje_size)+marge+(8*vakje_size/12),vakje_size/8,vakje_size/2),border_radius=8)
-                pygame.draw.rect(screen,(64,64,64),((car.x*vakje_size)+marge-(vakje_size/24),(car.y*vakje_size)+marge+(2*vakje_size),vakje_size/8,vakje_size/2),border_radius=8)
-                pygame.draw.rect(screen,(64,64,64),((car.x*vakje_size)+marge+(22*vakje_size/24),(car.y*vakje_size)+marge+(8*vakje_size/12),vakje_size/8,vakje_size/2),border_radius=8)
-                pygame.draw.rect(screen,(64,64,64),((car.x*vakje_size)+marge+(22*vakje_size/24),(car.y*vakje_size)+marge+(2*vakje_size),vakje_size/8,vakje_size/2),border_radius=8)
-            
-    
+        teken_auto(car)
             
     if win == True:
         selected_car = None
-        pygame.draw.rect(screen,(0,250,0),(marge,marge,vakje_size*vakje_aantal,vakje_size*vakje_aantal))
-        font_size = 100
-        font = pygame.font.Font(None,size = font_size)
-        text = font.render("YOU WIN",True,(0,0,0))
-        locationX = (pixels/2) - (text.get_width()/2)
-        locationY = (pixels/2) - (text.get_height()/2)
-        screen.blit(text,dest = (locationX,locationY))
+        win_animatie()
 
     pygame.display.flip()
 
