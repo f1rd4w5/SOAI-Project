@@ -49,56 +49,43 @@ while running:
             
         if event.type == pygame.KEYDOWN:
             if selected_car:
+                bezet = []
+                for car in vehicles:
+                    if car != selected_car:
+                        if car.oriëntatie == 'horizontaal':
+                            bezet.append((car.x,car.y))
+                            for i in range(car.lengte - 1):
+                                bezet.append((car.x + 1 + i,car.y))
+                        else:
+                            bezet.append((car.x,car.y))
+                            for i in range(car.lengte - 1):
+                                bezet.append((car.x,car.y + 1 + i))
                 if event.key == pygame.K_RIGHT:
-                    selected_rect = pygame.Rect(((selected_car.x + 1)*vakje_size)+marge,(selected_car.y*vakje_size)+marge,selected_car.lengte*vakje_size,vakje_size)
                     collision = False
-                    for car in vehicles:
-                        if car != selected_car:
-                            if car.oriëntatie == 'horizontaal':
-                                car_rect = pygame.Rect((car.x*vakje_size)+marge,(car.y*vakje_size)+marge,car.lengte*vakje_size,vakje_size)
-                            else:
-                                car_rect = pygame.Rect((car.x*vakje_size)+marge,(car.y*vakje_size)+marge,vakje_size,car.lengte*vakje_size)
-                            if selected_rect.colliderect(car_rect) == True:
-                                collision = True
+                    for j in bezet:
+                        if j == (selected_car.x + selected_car.lengte,selected_car.y):
+                            collision = True
                     if selected_car.oriëntatie == 'horizontaal' and (selected_car.x + selected_car.lengte) <= vakje_max and collision == False:
                             selected_car.x += 1
                 if event.key == pygame.K_LEFT:
-                    selected_rect = pygame.Rect(((selected_car.x - 1)*vakje_size)+marge,(selected_car.y*vakje_size)+marge,selected_car.lengte*vakje_size,vakje_size)
                     collision = False
-                    for car in vehicles:
-                        if car != selected_car:
-                            if car.oriëntatie == 'horizontaal':
-                                car_rect = pygame.Rect((car.x*vakje_size)+marge,(car.y*vakje_size)+marge,car.lengte*vakje_size,vakje_size)
-                            else:
-                                car_rect = pygame.Rect((car.x*vakje_size)+marge,(car.y*vakje_size)+marge,vakje_size,car.lengte*vakje_size)
-                            if selected_rect.colliderect(car_rect) == True:
-                                collision = True
+                    for j in bezet:
+                        if j == (selected_car.x - 1,selected_car.y):
+                            collision = True
                     if selected_car.oriëntatie == 'horizontaal' and (selected_car.x - 1) >= vakje_min and collision == False:
                         selected_car.x -= 1
                 if event.key == pygame.K_DOWN:
-                    selected_rect = pygame.Rect((selected_car.x*vakje_size)+marge,((selected_car.y + 1)*vakje_size)+marge,selected_car.lengte*vakje_size,vakje_size)
                     collision = False
-                    for car in vehicles:
-                        if car != selected_car:
-                            if car.oriëntatie == 'horizontaal':
-                                car_rect = pygame.Rect((car.x*vakje_size)+marge,(car.y*vakje_size)+marge,car.lengte*vakje_size,vakje_size)
-                            else:
-                                car_rect = pygame.Rect((car.x*vakje_size)+marge,(car.y*vakje_size)+marge,vakje_size,car.lengte*vakje_size)
-                            if selected_rect.colliderect(car_rect) == True:
-                                collision = True
+                    for j in bezet:
+                        if j == (selected_car.x,selected_car.y + selected_car.lengte):
+                            collision = True
                     if selected_car.oriëntatie == 'verticaal' and (selected_car.y + selected_car.lengte) <= vakje_max and collision == False:
                         selected_car.y += 1
                 if event.key == pygame.K_UP:
-                    selected_rect = pygame.Rect((selected_car.x*vakje_size)+marge,((selected_car.y - 1)*vakje_size)+marge,selected_car.lengte*vakje_size,vakje_size)
                     collision = False
-                    for car in vehicles:
-                        if car != selected_car:
-                            if car.oriëntatie == 'horizontaal':
-                                car_rect = pygame.Rect((car.x*vakje_size)+marge,(car.y*vakje_size)+marge,car.lengte*vakje_size,vakje_size)
-                            else:
-                                car_rect = pygame.Rect((car.x*vakje_size)+marge,(car.y*vakje_size)+marge,vakje_size,car.lengte*vakje_size)
-                            if selected_rect.colliderect(car_rect) == True:
-                                collision = True
+                    for j in bezet:
+                        if j == (selected_car.x,selected_car.y - 1):
+                            collision = True
                     if selected_car.oriëntatie == 'verticaal' and (selected_car.y - 1) >= vakje_min and collision == False:
                         selected_car.y -= 1
     
