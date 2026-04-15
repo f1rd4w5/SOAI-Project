@@ -4,6 +4,7 @@ pygame.init()
 screen = pygame.display.set_mode([600, 600])
 clock = pygame.time.Clock()
 
+#parameters, constanten en vaste lijsten
 selected_car = None
 win = False
 vakje_size = 60
@@ -24,9 +25,12 @@ class Voertuig:
         self.oriëntatie = oriëntatie
         self.color = color
 
+#vaste rode auto, lijst van voertuigen en exit surface
 red_car = Voertuig(0,3,2,'horizontaal',(200,0,0))
 vehicles = [red_car]
-exit_rect = pygame.Rect(marge + (7*vakje_size) - (vakje_size/6),marge + (3*vakje_size),vakje_size/6,vakje_size)
+exit_rect = pygame.Rect(marge+(7*vakje_size)-(vakje_size/6),marge+(3*vakje_size),vakje_size/6,vakje_size)
+
+#zelfgemaakte voertuigen om spel te testen
 car1 = Voertuig(2,3,2,'verticaal',(30,150,50))
 vehicles.append(car1)
 car2 = Voertuig(1,4,3,'verticaal',(250,250,60))
@@ -138,10 +142,12 @@ while running:
                     if selected_car.oriëntatie == 'verticaal' and (selected_car.y - 1) >= vakje_min and collision == False:
                         selected_car.y -= 1
     
+    #donker grijze achtergrond, lichtgrijze parking en licht groene exit
     screen.fill((30,30,30))
     pygame.draw.rect(screen,(160,160,160),(marge,marge,vakje_size*vakje_aantal,vakje_size*vakje_aantal))
     pygame.draw.rect(screen,(0,250,0),exit_rect)
     
+    #selected_car highlighten
     if selected_car:
         if selected_car.oriëntatie == 'horizontaal':
             pygame.draw.rect(screen,(150,250,50),((selected_car.x*vakje_size)+marge-(vakje_size/12),(selected_car.y*vakje_size)+marge-(vakje_size/12),(selected_car.lengte*vakje_size)+(vakje_size/6),7*vakje_size/6),border_radius=5)
