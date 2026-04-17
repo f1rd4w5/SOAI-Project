@@ -7,6 +7,7 @@ clock = pygame.time.Clock()
 #parameters, constanten en vaste lijsten
 selected_car = None
 win = False
+einde = False
 vakje_size = 60
 vakje_aantal = 7
 vakje_min = 0
@@ -27,16 +28,25 @@ class Voertuig:
 
 #vaste rode auto, lijst van voertuigen en exit surface
 red_car = Voertuig(0,3,2,'horizontaal',(200,0,0))
-vehicles = [red_car]
 exit_rect = pygame.Rect(marge+(7*vakje_size)-(vakje_size/6),marge+(3*vakje_size),vakje_size/6,vakje_size)
 
 #zelfgemaakte voertuigen om spel te testen
 car1 = Voertuig(2,3,2,'verticaal',(30,150,50))
-vehicles.append(car1)
 car2 = Voertuig(1,4,3,'verticaal',(250,250,60))
-vehicles.append(car2)
 car3 = Voertuig(3,5,3,'horizontaal',(200,0,100))
-vehicles.append(car3)
+car4 = Voertuig(1,4,2,'verticaal',(200,100,50))
+car5 = Voertuig(3,1,2,'horizontaal',(30,100,200))
+car6 = Voertuig(1,4,3,'horizontaal',(30,150,50))
+
+#zelfgemaakte lijsten van voertuigen voor de levels om spel te testen
+level1_voertuigen = [red_car,car1,car2]
+level2_voertuigen = [red_car,car3,car4]
+level3_voertuigen = [red_car,car5,car6]
+
+levels = [level1_voertuigen,level2_voertuigen,level3_voertuigen]
+
+current_level = 0
+vehicles = levels[current_level]
 
 def bezette_vakjes(lijst_voertuigen,selected_voertuig):
     bezet = []
@@ -141,6 +151,16 @@ while running:
                             collision = True
                     if selected_car.oriëntatie == 'verticaal' and (selected_car.y - 1) >= vakje_min and collision == False:
                         selected_car.y -= 1
+            
+            if win == True:
+                if event.key == pygame.K_SPACE:
+                    win = False
+                    if current_level == 2:
+                        einde = True
+                    else:
+                        current_level += 1
+                        vehicles = levels[current_level]
+                        red_car.x,red_car.y = 0,3 
     
     #donker grijze achtergrond, lichtgrijze parking en licht groene exit
     screen.fill((30,30,30))
@@ -160,6 +180,9 @@ while running:
     if win == True:
         selected_car = None
         win_animatie()
+    
+    if einde == True:
+        pygame.draw.rect(screen,(0,0,0),(marge,marge,vakje_size*vakje_aantal,vakje_size*vakje_aantal))
 
     pygame.display.flip()
 
