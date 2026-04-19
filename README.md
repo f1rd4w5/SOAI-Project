@@ -7,7 +7,10 @@ clock = pygame.time.Clock()
 #parameters, constanten en vaste lijsten
 selected_car = None
 win = False
+lose = False
+moves_level4 = 12
 einde = False
+aantal_levels = 8
 vakje_size = 60
 vakje_aantal = 7
 vakje_min = 0
@@ -37,16 +40,37 @@ car3 = Voertuig(3,5,3,'horizontaal',(200,0,100))
 car4 = Voertuig(1,4,2,'verticaal',(200,100,50))
 car5 = Voertuig(3,1,2,'horizontaal',(30,100,200))
 car6 = Voertuig(1,4,3,'horizontaal',(30,150,50))
+car7 = Voertuig(1,4,3,'horizontaal',(30,150,50))
+car8 = Voertuig(4,0,3,'verticaal',(30,100,200))
+car9 = Voertuig(0,0,2,'verticaal',(200,0,100))
+car10 = Voertuig(4,0,3,'verticaal',(30,100,200))
+car11 = Voertuig(4,1,2,'horizontaal',(30,150,50))
+car12 = Voertuig(0,5,3,'horizontaal',(250,250,60))
+car13 = Voertuig(0,5,3,'horizontaal',(200,100,50))
+car14 = Voertuig(2,0,2,'verticaal',(30,150,50))
 
 #zelfgemaakte lijsten van voertuigen voor de levels om spel te testen
 level1_voertuigen = [red_car,car1,car2]
 level2_voertuigen = [red_car,car3,car4]
 level3_voertuigen = [red_car,car5,car6]
+level4_voertuigen = [red_car,car7,car8]
+level5_voertuigen = [red_car,car9,car10]
+level6_voertuigen = [red_car,car11,car12]
+level7_voertuigen = [red_car,car13,car14]
+level8_voertuigen = [red_car]
 
-levels = [level1_voertuigen,level2_voertuigen,level3_voertuigen]
+levels = [level1_voertuigen,level2_voertuigen,level3_voertuigen,level4_voertuigen,level5_voertuigen,level6_voertuigen,level7_voertuigen,level8_voertuigen]
 
 current_level = 0
 vehicles = levels[current_level]
+
+begin_posities = []
+for i in range(aantal_levels):
+    begin_posities_per_level = []
+    for car in levels[i]:
+        (car_x_begin,car_y_begin) = (car.x,car.y)
+        begin_posities_per_level.append((car_x_begin,car_y_begin))
+    begin_posities.append(begin_posities_per_level)
 
 def bezette_vakjes(lijst_voertuigen,selected_voertuig):
     bezet = []
@@ -98,6 +122,15 @@ def win_animatie():
     locationX = (pixels/2) - (text.get_width()/2)
     locationY = (pixels/2) - (text.get_height()/2)
     screen.blit(text,dest = (locationX,locationY))
+    
+def lose_animatie():
+    pygame.draw.rect(screen,(250,0,0),(marge,marge,vakje_size*vakje_aantal,vakje_size*vakje_aantal))
+    font_size = 100
+    font = pygame.font.Font(None,size = font_size)
+    text = font.render("YOU LOSE",True,(0,0,0))
+    locationX = (pixels/2) - (text.get_width()/2)
+    locationY = (pixels/2) - (text.get_height()/2)
+    screen.blit(text,dest = (locationX,locationY))
 
 running = True
 while running:
@@ -130,6 +163,10 @@ while running:
                         selected_car.x += 1
                         if red_car.x == (vakje_max - red_car.lengte + 1):
                             win = True
+                        if current_level == 3:
+                            moves_level4 -= 1
+                            if moves_level4 == 0 and win == False:
+                                lose = True
                 if event.key == pygame.K_LEFT:
                     collision = False
                     for j in bezet:
@@ -137,6 +174,10 @@ while running:
                             collision = True
                     if selected_car.oriëntatie == 'horizontaal' and (selected_car.x - 1) >= vakje_min and collision == False:
                         selected_car.x -= 1
+                        if current_level == 3:
+                            moves_level4 -= 1
+                            if moves_level4 == 0:
+                                lose = True
                 if event.key == pygame.K_DOWN:
                     collision = False
                     for j in bezet:
@@ -144,6 +185,10 @@ while running:
                             collision = True
                     if selected_car.oriëntatie == 'verticaal' and (selected_car.y + selected_car.lengte) <= vakje_max and collision == False:
                         selected_car.y += 1
+                        if current_level == 3:
+                            moves_level4 -= 1
+                            if moves_level4 == 0:
+                                lose = True
                 if event.key == pygame.K_UP:
                     collision = False
                     for j in bezet:
@@ -151,16 +196,28 @@ while running:
                             collision = True
                     if selected_car.oriëntatie == 'verticaal' and (selected_car.y - 1) >= vakje_min and collision == False:
                         selected_car.y -= 1
+                        if current_level == 3:
+                            moves_level4 -= 1
+                            if moves_level4 == 0:
+                                lose = True
             
             if win == True:
                 if event.key == pygame.K_SPACE:
                     win = False
-                    if current_level == 2:
+                    if current_level == (aantal_levels - 1):
                         einde = True
                     else:
                         current_level += 1
                         vehicles = levels[current_level]
                         red_car.x,red_car.y = 0,3 
+                        
+            if lose == True:
+                if event.key == pygame.K_SPACE:
+                    lose = False
+                    index = 0
+                    for car in levels[current_level]:
+                        (car.x,car.y) = begin_posities[current_level][index]
+                        index += 1
     
     #donker grijze achtergrond, lichtgrijze parking en licht groene exit
     screen.fill((30,30,30))
@@ -180,6 +237,10 @@ while running:
     if win == True:
         selected_car = None
         win_animatie()
+    
+    if lose == True:
+        selected_car = None
+        lose_animatie()
     
     if einde == True:
         pygame.draw.rect(screen,(0,0,0),(marge,marge,vakje_size*vakje_aantal,vakje_size*vakje_aantal))
