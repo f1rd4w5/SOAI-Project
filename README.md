@@ -2,7 +2,7 @@ import pygame
 pygame.init()
 pygame.mixer.init()
 
-politie_sound = pygame.mixer.Sound('C:/Users/firda/.spyder-py3/autosave/Police sirene.wav')
+politie_sound = pygame.mixer.Sound('C:/Users/firda/.spyder-py3/Politie sound.mp3')
 politie_duur = 10500
 
 screen = pygame.display.set_mode([600, 600])
@@ -38,13 +38,14 @@ class Police_car(Voertuig):
     def __init__(self,x,y,lengte,oriëntatie,color):
         super().__init__(x,y,lengte,oriëntatie,color)
 
-class Locked_Car(Voertuig):
+class Reversed_car(Voertuig):
     def __init__(self,x,y,lengte,oriëntatie,color):
         super().__init__(x,y,lengte,oriëntatie,color)
 
 #vaste rode auto, lijst van voertuigen en exit surface
 red_car = Voertuig(0,3,2,'horizontaal',(200,0,0))
 politie_car = Police_car(0,5,2,'horizontaal',(30,30,30))
+reversed_auto = Reversed_car(5,5,2,'verticaal',(30,100,200))
 exit_rect = pygame.Rect(marge+(7*vakje_size)-(vakje_size/6),marge+(3*vakje_size),vakje_size/6,vakje_size)
 
 #zelfgemaakte voertuigen om spel te testen
@@ -69,7 +70,7 @@ level2_voertuigen = [red_car,car3,car4]
 level3_voertuigen = [red_car,car5,car6]
 level4_voertuigen = [red_car,car7,car8]
 level5_voertuigen = [red_car,politie_car,car9,car10]
-level6_voertuigen = [red_car,car11,car12]
+level6_voertuigen = [red_car,reversed_auto,car11,car12]
 level7_voertuigen = [red_car,car13,car14]
 level8_voertuigen = [red_car]
 
@@ -145,7 +146,7 @@ def lose_animatie():
     locationX = (pixels/2) - (text.get_width()/2)
     locationY = (pixels/2) - (text.get_height()/2)
     screen.blit(text,dest = (locationX,locationY))
-
+    
 running = True
 while running:
 
@@ -167,8 +168,18 @@ while running:
             
         if event.type == pygame.KEYDOWN:
             if selected_car:
+                key = event.key
+                if isinstance(selected_car,Reversed_car):
+                    if key == pygame.K_RIGHT:
+                        key = pygame.K_LEFT
+                    elif key == pygame.K_LEFT:
+                        key = pygame.K_RIGHT
+                    elif key == pygame.K_DOWN:
+                        key = pygame.K_UP
+                    elif key == pygame.K_UP:
+                        key = pygame.K_DOWN
                 bezet = bezette_vakjes(vehicles,selected_car)
-                if event.key == pygame.K_RIGHT:
+                if key == pygame.K_RIGHT:
                     collision = False
                     beweging = False
                     for j in bezet:
@@ -195,7 +206,7 @@ while running:
                             moves_level4 -= 1
                             if moves_level4 == 0 and win == False:
                                 lose = True
-                if event.key == pygame.K_LEFT:
+                if key == pygame.K_LEFT:
                     collision = False
                     beweging = False
                     for j in bezet:
@@ -220,7 +231,7 @@ while running:
                             moves_level4 -= 1
                             if moves_level4 == 0:
                                 lose = True
-                if event.key == pygame.K_DOWN:
+                if key == pygame.K_DOWN:
                     collision = False
                     beweging = False
                     for j in bezet:
@@ -245,7 +256,7 @@ while running:
                             moves_level4 -= 1
                             if moves_level4 == 0:
                                 lose = True
-                if event.key == pygame.K_UP:
+                if key == pygame.K_UP:
                     collision = False
                     beweging = False
                     for j in bezet:
@@ -297,9 +308,15 @@ while running:
     #selected_car highlighten
     if selected_car:
         if selected_car.oriëntatie == 'horizontaal':
-            pygame.draw.rect(screen,(150,250,50),((selected_car.x*vakje_size)+marge-(vakje_size/12),(selected_car.y*vakje_size)+marge-(vakje_size/12),(selected_car.lengte*vakje_size)+(vakje_size/6),7*vakje_size/6),border_radius=5)
+            if isinstance(selected_car,Reversed_car):
+                pygame.draw.rect(screen,(250,100,250),((selected_car.x*vakje_size)+marge-(vakje_size/12),(selected_car.y*vakje_size)+marge-(vakje_size/12),(selected_car.lengte*vakje_size)+(vakje_size/6),7*vakje_size/6),border_radius=5)
+            else:
+                pygame.draw.rect(screen,(150,250,50),((selected_car.x*vakje_size)+marge-(vakje_size/12),(selected_car.y*vakje_size)+marge-(vakje_size/12),(selected_car.lengte*vakje_size)+(vakje_size/6),7*vakje_size/6),border_radius=5)
         else:
-            pygame.draw.rect(screen,(150,250,50),((selected_car.x*vakje_size)+marge-(vakje_size/12),(selected_car.y*vakje_size)+marge-(vakje_size/12),7*vakje_size/6,(selected_car.lengte*vakje_size)+(vakje_size/6)),border_radius=5)
+            if isinstance(selected_car,Reversed_car):
+                pygame.draw.rect(screen,(250,100,250),((selected_car.x*vakje_size)+marge-(vakje_size/12),(selected_car.y*vakje_size)+marge-(vakje_size/12),7*vakje_size/6,(selected_car.lengte*vakje_size)+(vakje_size/6)),border_radius=5)
+            else:
+                pygame.draw.rect(screen,(150,250,50),((selected_car.x*vakje_size)+marge-(vakje_size/12),(selected_car.y*vakje_size)+marge-(vakje_size/12),7*vakje_size/6,(selected_car.lengte*vakje_size)+(vakje_size/6)),border_radius=5)
     
     for car in vehicles:
         teken_auto(car)
