@@ -12,10 +12,14 @@ screen = pygame.display.set_mode([600, 600])
 clock = pygame.time.Clock()
 
 #parameters, constanten en vaste lijsten
+started = False
 selected_car = None
 win = False
 lose = False
+beweging = False
 politie = False
+politie_begintijd = None
+huidige_tijd_timer = None
 timer_begin = None
 moves_level4 = 12
 exit_blocked = False
@@ -51,7 +55,7 @@ class Reversed_car(Voertuig):
 
 #vaste rode auto, lijst van voertuigen, en exit en button surface
 red_car = Voertuig(0,3,2,'horizontaal',(200,0,0))
-politie_car = Police_car(0,5,2,'horizontaal',(30,30,30))
+politie_car = Police_car(0,5,2,'verticaal',(230,230,230))
 reversed_auto = Reversed_car(5,5,2,'verticaal',(30,100,200))
 exit_rect = pygame.Rect(marge+(7*vakje_size)-(vakje_size/6),marge+(3*vakje_size),vakje_size/6,vakje_size)
 button_vakje = pygame.Rect((button_coördinaat[0]*vakje_size)+marge,(button_coördinaat[1]*vakje_size)+marge,vakje_size,vakje_size)
@@ -109,6 +113,91 @@ def bezette_vakjes(lijst_voertuigen,selected_voertuig):
                     bezet.append((car.x,car.y + 1 + i))
     return bezet
 
+def start_screen():
+    screen.fill((30,30,30))
+    font1 = pygame.font.Font(None,size = 100)
+    font2 = pygame.font.Font(None,size = 30)
+    text1 = font1.render("REBELRIDE",True,(250,250,250))
+    text2 = font2.render("In this game, you must get the red car out of the",True,(250,250,250))
+    text3 = font2.render("parking lot by moving the present vehicles around.",True,(250,250,250))
+    text4 = font2.render("Controls:",True,(250,250,250))
+    text5 = font2.render("left mouse click: select vehicle",True,(250,250,250))
+    text6 = font2.render("arrows: move vehicles",True,(250,250,250))
+    text7 = font2.render("Enjoy and keep your sound on, you know, just in case...",True,(250,250,250))
+    text8 = font2.render("Press S to start the game",True,(250,250,250))
+    locationX1 = (pixels/2) - (text1.get_width()/2)
+    locationY1 = (pixels/4) - (text1.get_height()/2)
+    locationX2 = (pixels/2) - (text2.get_width()/2)
+    locationY2 = (pixels/2) - (2*text2.get_height())
+    locationX3 = (pixels/2) - (text3.get_width()/2)
+    locationY3 = (pixels/2) - (text2.get_height())
+    locationX4 = (pixels/2) - (text4.get_width()/2)
+    locationY4 = (3*pixels/5) - (text4.get_height()/2)
+    locationX5 = (pixels/2) - (text5.get_width()/2)
+    locationY5 = (3*pixels/5) + (text4.get_height())
+    locationX6 = (pixels/2) - (text6.get_width()/2)
+    locationY6 = (3*pixels/5) + (2*text4.get_height())
+    locationX7 = (pixels/2) - (text7.get_width()/2)
+    locationY7 = (3*pixels/4) + (text7.get_height()/2)
+    locationX8 = (pixels/2) - (text8.get_width()/2)
+    locationY8 = (7*pixels/8) - (text8.get_height()/2)
+    screen.blit(text1,dest = (locationX1,locationY1))
+    screen.blit(text2,dest = (locationX2,locationY2))
+    screen.blit(text3,dest = (locationX3,locationY3))
+    screen.blit(text4,dest = (locationX4,locationY4))
+    screen.blit(text5,dest = (locationX5,locationY5))
+    screen.blit(text6,dest = (locationX6,locationY6))
+    screen.blit(text7,dest = (locationX7,locationY7))
+    screen.blit(text8,dest = (locationX8,locationY8))
+    
+def level_info(level,moves,huidige,begin):
+    font1 = pygame.font.Font(None,size = 35)
+    font2 = pygame.font.Font(None,size = 25)
+    font3 = pygame.font.Font(None,size = 20)
+    font4 = pygame.font.Font(None,size = 25)
+    text1 = font1.render(f"Level {level + 1}/8",True,(250,250,250))
+    locationX1 = (pixels/2) - (text1.get_width()/2)
+    locationY1 = (pixels/14) - (text1.get_height()/2)
+    screen.blit(text1,dest = (locationX1,locationY1))
+    if lose == False and win == False:
+        text4 = font4.render("Press R to restart level",True,(250,250,250))
+        locationX4 = (pixels/2) - (text4.get_width()/2)
+        locationY4 = (14*pixels/15)
+        screen.blit(text4,dest = (locationX4,locationY4))
+    if level == 0:
+        text2 = font2.render("Welcome to the game!",True,(250,250,250))
+    elif level == 1:
+        text2 = font2.render("Okay, your skills aren't too bad...",True,(250,250,250))
+    elif level == 2:
+        text2 = font2.render("I see you're getting the hang of it.",True,(250,250,250))
+    elif level == 3:
+        text2 = font2.render("Diesel's getting expensive... don't move too much.",True,(250,250,250))
+        if lose == False and win == False:
+            text5 = font1.render(f"Moves left: {moves}",True,(250,250,250))
+            locationX5 = (pixels/2) - (text5.get_width()/2)
+            locationY5 = (7*pixels/8)
+            screen.blit(text5,dest = (locationX5,locationY5))
+    elif level == 4:
+        text2 = font2.render("Don't move when the police is around!",True,(250,250,250))
+    elif level == 5:
+        text2 = font2.render("Everything seems pretty normal, right?",True,(250,250,250))
+    elif level == 6:
+        text2 = font2.render("Hurry up! The gate's going to close!",True,(250,250,250))
+        if lose == False and win == False and huidige != None and begin != None:
+            text6 = font1.render(f"Time left: {60 - ((huidige - begin)//1000)} seconds",True,(250,250,250))
+            locationX6 = (pixels/2) - (text6.get_width()/2)
+            locationY6 = (7*pixels/8)
+            screen.blit(text6,dest = (locationX6,locationY6))
+    elif level == 7:
+        text2 = font2.render("You escaped on time! Or, did you?",True,(250,250,250))
+        text3 = font3.render("Hint: find the red button to open the gate.",True,(250,250,250))
+        locationX3 = (pixels/2) - (text3.get_width()/2)
+        locationY3 = (pixels/12) + (5*text2.get_height()/4)
+        screen.blit(text3,dest = (locationX3,locationY3))
+    locationX2 = (pixels/2) - (text2.get_width()/2)
+    locationY2 = (pixels/14) + (text1.get_height()/2)
+    screen.blit(text2,dest = (locationX2,locationY2))
+
 def teken_auto(vehicle):
     if vehicle.oriëntatie == 'horizontaal':
         pygame.draw.rect(screen,vehicle.color,((vehicle.x*vakje_size)+marge,(vehicle.y*vakje_size)+marge,vehicle.lengte*vakje_size,vakje_size),border_radius=5)
@@ -123,6 +212,9 @@ def teken_auto(vehicle):
             pygame.draw.rect(screen,(64,64,64),((vehicle.x*vakje_size)+marge+(22*vakje_size/12),(vehicle.y*vakje_size)+marge-(vakje_size/24),vakje_size/2,vakje_size/8),border_radius=8)
             pygame.draw.rect(screen,(64,64,64),((vehicle.x*vakje_size)+marge+(vakje_size/2),(vehicle.y*vakje_size)+marge+(22*vakje_size/24),vakje_size/2,vakje_size/8),border_radius=8)
             pygame.draw.rect(screen,(64,64,64),((vehicle.x*vakje_size)+marge+(22*vakje_size/12),(vehicle.y*vakje_size)+marge+(22*vakje_size/24),vakje_size/2,vakje_size/8),border_radius=8)
+        if isinstance(vehicle,Police_car):
+            pygame.draw.rect(screen,(200,0,0),((vehicle.x*vakje_size)+marge+vakje_size,(vehicle.y*vakje_size)+marge+(vakje_size/4),vakje_size/6,vakje_size/4))
+            pygame.draw.rect(screen,(30,100,200),((vehicle.x*vakje_size)+marge+vakje_size,(vehicle.y*vakje_size)+marge+(vakje_size/2),vakje_size/6,vakje_size/4))
     else:
         pygame.draw.rect(screen,vehicle.color,((vehicle.x*vakje_size)+marge,(vehicle.y*vakje_size)+marge,vakje_size,vehicle.lengte*vakje_size),border_radius=5)
         pygame.draw.rect(screen,(130,220,250),((vehicle.x*vakje_size)+marge+((vakje_size-(5*vakje_size/6))/2),(vehicle.y*vakje_size)+marge+(vakje_size/12),5*vakje_size/6,vakje_size/3),border_radius=3)
@@ -136,29 +228,75 @@ def teken_auto(vehicle):
             pygame.draw.rect(screen,(64,64,64),((vehicle.x*vakje_size)+marge-(vakje_size/24),(vehicle.y*vakje_size)+marge+(2*vakje_size),vakje_size/8,vakje_size/2),border_radius=8)
             pygame.draw.rect(screen,(64,64,64),((vehicle.x*vakje_size)+marge+(22*vakje_size/24),(vehicle.y*vakje_size)+marge+(8*vakje_size/12),vakje_size/8,vakje_size/2),border_radius=8)
             pygame.draw.rect(screen,(64,64,64),((vehicle.x*vakje_size)+marge+(22*vakje_size/24),(vehicle.y*vakje_size)+marge+(2*vakje_size),vakje_size/8,vakje_size/2),border_radius=8)
+        if isinstance(vehicle,Police_car):
+            pygame.draw.rect(screen,(200,0,0),((vehicle.x*vakje_size)+marge+(vakje_size/4),(vehicle.y*vakje_size)+marge+(4*vakje_size/6),vakje_size/4,vakje_size/6))
+            pygame.draw.rect(screen,(30,100,200),((vehicle.x*vakje_size)+marge+(vakje_size/2),(vehicle.y*vakje_size)+marge+(4*vakje_size/6),vakje_size/4,vakje_size/6))
   
 def win_animatie():
     pygame.draw.rect(screen,(0,250,0),(marge,marge,vakje_size*vakje_aantal,vakje_size*vakje_aantal))
-    font_size = 100
-    font = pygame.font.Font(None,size = font_size)
-    text = font.render("YOU WIN",True,(0,0,0))
-    locationX = (pixels/2) - (text.get_width()/2)
-    locationY = (pixels/2) - (text.get_height()/2)
-    screen.blit(text,dest = (locationX,locationY))
+    font1 = pygame.font.Font(None,size = 100)
+    font2 = pygame.font.Font(None,size = 30)
+    text1 = font1.render("YOU WIN",True,(0,0,0))
+    locationX1 = (pixels/2) - (text1.get_width()/2)
+    locationY1 = (pixels/2) - (text1.get_height()/2)
+    screen.blit(text1,dest = (locationX1,locationY1))
+    if  current_level == 7:
+        text2 = font2.render("Press SPACE to go to the credits",True,(0,0,0))
+    else:
+        text2 = font2.render("Press SPACE to go to the next level",True,(0,0,0))
+    locationX2 = (pixels/2) - (text2.get_width()/2)
+    locationY2 = (3*pixels/5) - (text2.get_height()/2)
+    screen.blit(text2,dest = (locationX2,locationY2))
     
 def lose_animatie():
     pygame.draw.rect(screen,(250,0,0),(marge,marge,vakje_size*vakje_aantal,vakje_size*vakje_aantal))
-    font_size = 100
-    font = pygame.font.Font(None,size = font_size)
-    text = font.render("YOU LOSE",True,(0,0,0))
-    locationX = (pixels/2) - (text.get_width()/2)
-    locationY = (pixels/2) - (text.get_height()/2)
-    screen.blit(text,dest = (locationX,locationY))
+    font1 = pygame.font.Font(None,size = 100)
+    font2 = pygame.font.Font(None,size = 30)
+    text1 = font1.render("YOU LOSE",True,(0,0,0))
+    locationX1 = (pixels/2) - (text1.get_width()/2)
+    locationY1 = (pixels/2) - (text1.get_height()/2)
+    screen.blit(text1,dest = (locationX1,locationY1))
+    text2 = font2.render("Press SPACE to restart the level",True,(0,0,0))
+    locationX2 = (pixels/2) - (text2.get_width()/2)
+    locationY2 = (3*pixels/5) - (text2.get_height()/2)
+    screen.blit(text2,dest = (locationX2,locationY2))
+
+def end_screen():
+    screen.fill((30,30,30))
+    font1 = pygame.font.Font(None,size = 70)
+    font2 = pygame.font.Font(None,size = 35)
+    text1 = font1.render("Thank you for playing!",True,(250,250,250))
+    text2 = font2.render("A game by:",True,(250,250,250))
+    text3 = font2.render("Aharchi Firdaws",True,(250,250,250))
+    text4 = font2.render("Barouch Nisrine",True,(250,250,250))
+    text5 = font2.render("El Ouassyf Soraya",True,(250,250,250))
+    locationX1 = (pixels/2) - (text1.get_width()/2)
+    locationY1 = (pixels/4) - (text1.get_height()/2)
+    locationX2 = (pixels/2) - (text2.get_width()/2)
+    locationY2 = (pixels/2) - (2*text2.get_height())
+    locationX3 = (pixels/2) - (text3.get_width()/2)
+    locationY3 = (pixels/2) - (text2.get_height()/2)
+    locationX4 = (pixels/2) - (text4.get_width()/2)
+    locationY4 = (pixels/2) + (text2.get_height()/2)
+    locationX5 = (pixels/2) - (text5.get_width()/2)
+    locationY5 = (pixels/2) + (3*text2.get_height()/2)
+    screen.blit(text1,dest = (locationX1,locationY1))
+    screen.blit(text2,dest = (locationX2,locationY2))
+    screen.blit(text3,dest = (locationX3,locationY3))
+    screen.blit(text4,dest = (locationX4,locationY4))
+    screen.blit(text5,dest = (locationX5,locationY5))
 
 running = True
 while running:
 
     clock.tick(20)
+    
+    if politie == True and politie_begintijd != None:
+        huidige_tijd_politie = pygame.time.get_ticks()
+        if huidige_tijd_politie - politie_begintijd > politie_duur:
+            politie = False
+            politie_begintijd = None
+    
     if timer_begin:
         huidige_tijd_timer = pygame.time.get_ticks()
         if huidige_tijd_timer - timer_begin > timer_duur:
@@ -199,7 +337,6 @@ while running:
                 bezet = bezette_vakjes(vehicles,selected_car)
                 if key == pygame.K_RIGHT:
                     collision = False
-                    beweging = False
                     for j in bezet:
                         if j == (selected_car.x + selected_car.lengte,selected_car.y):
                             collision = True
@@ -207,14 +344,11 @@ while running:
                         selected_car.x += 1
                         beweging = True
                         if isinstance(selected_car,Police_car) and politie == False:
+                            politie_sound.stop()
                             politie_sound.play()
                             politie = True
                             beweging = False
                             politie_begintijd = pygame.time.get_ticks()
-                        if politie == True:
-                            huidige_tijd_politie = pygame.time.get_ticks()
-                            if huidige_tijd_politie - politie_begintijd > politie_duur:
-                                politie = False
                         if politie == True and beweging == True:
                             lose = True
                             politie_sound.stop()
@@ -235,7 +369,6 @@ while running:
                                 lose = True
                 elif key == pygame.K_LEFT:
                     collision = False
-                    beweging = False
                     for j in bezet:
                         if j == (selected_car.x - 1,selected_car.y):
                             collision = True
@@ -243,14 +376,11 @@ while running:
                         selected_car.x -= 1
                         beweging = True
                         if isinstance(selected_car,Police_car) and politie == False:
+                            politie_sound.stop()
                             politie_sound.play()
                             politie = True
                             beweging = False
                             politie_begintijd = pygame.time.get_ticks()
-                        if politie == True:
-                            huidige_tijd_politie = pygame.time.get_ticks()
-                            if huidige_tijd_politie - politie_begintijd > politie_duur:
-                                politie = False
                         if politie == True and beweging == True:
                             lose = True
                             politie_sound.stop()
@@ -260,7 +390,6 @@ while running:
                                 lose = True
                 elif key == pygame.K_DOWN:
                     collision = False
-                    beweging = False
                     for j in bezet:
                         if j == (selected_car.x,selected_car.y + selected_car.lengte):
                             collision = True
@@ -268,14 +397,11 @@ while running:
                         selected_car.y += 1
                         beweging = True
                         if isinstance(selected_car,Police_car) and politie == False:
+                            politie_sound.stop()
                             politie_sound.play()
                             politie = True
                             beweging = False
                             politie_begintijd = pygame.time.get_ticks()
-                        if politie == True:
-                            huidige_tijd_politie = pygame.time.get_ticks()
-                            if huidige_tijd_politie - politie_begintijd > politie_duur:
-                                politie = False
                         if politie == True and beweging == True:
                             lose = True
                             politie_sound.stop()
@@ -285,7 +411,6 @@ while running:
                                 lose = True
                 elif key == pygame.K_UP:
                     collision = False
-                    beweging = False
                     for j in bezet:
                         if j == (selected_car.x,selected_car.y - 1):
                             collision = True
@@ -293,14 +418,11 @@ while running:
                         selected_car.y -= 1
                         beweging = True
                         if isinstance(selected_car,Police_car) and politie == False:
+                            politie_sound.stop()
                             politie_sound.play()
                             politie = True
                             beweging = False
                             politie_begintijd = pygame.time.get_ticks()
-                        if politie == True:
-                            huidige_tijd_politie = pygame.time.get_ticks()
-                            if huidige_tijd_politie - politie_begintijd > politie_duur:
-                                politie = False
                         if politie == True and beweging == True:
                             lose = True
                             politie_sound.stop()
@@ -309,6 +431,23 @@ while running:
                             if moves_level4 == 0:
                                 lose = True
             
+            if started == False:
+                if event.key == pygame.K_s:
+                    started = True
+                    
+            if started == True and lose == False and win == False:
+                if event.key == pygame.K_r:
+                    selected_car = None
+                    politie = False
+                    timer_begin = None
+                    beweging = False
+                    index = 0
+                    for car in levels[current_level]:
+                        (car.x,car.y) = begin_posities[current_level][index]
+                        index += 1
+                    if current_level == 6:
+                        timer_begin = pygame.time.get_ticks()
+
             if win == True:
                 if event.key == pygame.K_SPACE:
                     win = False
@@ -359,6 +498,12 @@ while running:
         pygame.draw.rect(screen,(0,0,0),button_vakje)
         pygame.draw.circle(screen,(250,0,0),(button_vakje.x + (vakje_size/2),button_vakje.y + (vakje_size/2)),vakje_size/6)
     
+    if started == False:
+        start_screen()
+        
+    if started == True:
+        level_info(current_level,moves_level4,huidige_tijd_timer,timer_begin)
+    
     if win == True:
         selected_car = None
         timer_begin = None
@@ -366,13 +511,14 @@ while running:
     
     if lose == True:
         selected_car = None
+        moves_level4 = 12
         politie = False
         timer_begin = None
         beweging = False
         lose_animatie()
     
     if einde == True:
-        pygame.draw.rect(screen,(0,0,0),(marge,marge,vakje_size*vakje_aantal,vakje_size*vakje_aantal))
+        end_screen()
 
     pygame.display.flip()
 
