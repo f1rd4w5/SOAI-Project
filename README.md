@@ -8,7 +8,7 @@ politie_duur = 10500
 
 timer_duur = 60000
 
-screen = pygame.display.set_mode([600, 600])
+screen = pygame.display.set_mode([600,600])
 clock = pygame.time.Clock()
 
 #parameters, constanten en vaste lijsten
@@ -19,6 +19,7 @@ lose = False
 beweging = False
 politie = False
 politie_begintijd = None
+huidige_tijd_politie = None
 huidige_tijd_timer = None
 timer_begin = None
 moves_level4 = 12
@@ -150,6 +151,14 @@ def start_screen():
     screen.blit(text7,dest = (locationX7,locationY7))
     screen.blit(text8,dest = (locationX8,locationY8))
     
+def teken_background(exit_block):
+    screen.fill((30,30,30))
+    pygame.draw.rect(screen,(160,160,160),(marge,marge,vakje_size*vakje_aantal,vakje_size*vakje_aantal))
+    if exit_block == False:
+        pygame.draw.rect(screen,(0,250,0),exit_rect)
+    else:
+        pygame.draw.rect(screen,(250,0,0),exit_rect)
+
 def level_info(level,moves,huidige,begin):
     font1 = pygame.font.Font(None,size = 35)
     font2 = pygame.font.Font(None,size = 25)
@@ -232,6 +241,22 @@ def teken_auto(vehicle):
             pygame.draw.rect(screen,(200,0,0),((vehicle.x*vakje_size)+marge+(vakje_size/4),(vehicle.y*vakje_size)+marge+(4*vakje_size/6),vakje_size/4,vakje_size/6))
             pygame.draw.rect(screen,(30,100,200),((vehicle.x*vakje_size)+marge+(vakje_size/2),(vehicle.y*vakje_size)+marge+(4*vakje_size/6),vakje_size/4,vakje_size/6))
   
+def highlight_car(vehicle):
+    if vehicle.oriëntatie == 'horizontaal':
+        if isinstance(vehicle,Reversed_car):
+            pygame.draw.rect(screen,(250,100,250),((vehicle.x*vakje_size)+marge-(vakje_size/12),(vehicle.y*vakje_size)+marge-(vakje_size/12),(vehicle.lengte*vakje_size)+(vakje_size/6),7*vakje_size/6),border_radius=5)
+        else:
+            pygame.draw.rect(screen,(150,250,50),((vehicle.x*vakje_size)+marge-(vakje_size/12),(vehicle.y*vakje_size)+marge-(vakje_size/12),(vehicle.lengte*vakje_size)+(vakje_size/6),7*vakje_size/6),border_radius=5)
+    else:
+        if isinstance(vehicle,Reversed_car):
+            pygame.draw.rect(screen,(250,100,250),((vehicle.x*vakje_size)+marge-(vakje_size/12),(vehicle.y*vakje_size)+marge-(vakje_size/12),7*vakje_size/6,(vehicle.lengte*vakje_size)+(vakje_size/6)),border_radius=5)
+        else:
+            pygame.draw.rect(screen,(150,250,50),((vehicle.x*vakje_size)+marge-(vakje_size/12),(vehicle.y*vakje_size)+marge-(vakje_size/12),7*vakje_size/6,(vehicle.lengte*vakje_size)+(vakje_size/6)),border_radius=5)
+
+def teken_button(button_vak):
+    pygame.draw.rect(screen,(0,0,0),button_vak)
+    pygame.draw.circle(screen,(250,0,0),(button_vak.x + (vakje_size/2),button_vak.y + (vakje_size/2)),vakje_size/6)
+
 def win_animatie():
     pygame.draw.rect(screen,(0,250,0),(marge,marge,vakje_size*vakje_aantal,vakje_size*vakje_aantal))
     font1 = pygame.font.Font(None,size = 100)
@@ -286,6 +311,7 @@ def end_screen():
     screen.blit(text4,dest = (locationX4,locationY4))
     screen.blit(text5,dest = (locationX5,locationY5))
 
+
 running = True
 while running:
 
@@ -296,7 +322,7 @@ while running:
         if huidige_tijd_politie - politie_begintijd > politie_duur:
             politie = False
             politie_begintijd = None
-    
+            
     if timer_begin:
         huidige_tijd_timer = pygame.time.get_ticks()
         if huidige_tijd_timer - timer_begin > timer_duur:
@@ -335,6 +361,7 @@ while running:
                     elif key == pygame.K_UP:
                         key = pygame.K_DOWN
                 bezet = bezette_vakjes(vehicles,selected_car)
+                
                 if key == pygame.K_RIGHT:
                     collision = False
                     for j in bezet:
@@ -470,33 +497,16 @@ while running:
                     if current_level == 6:
                         timer_begin = pygame.time.get_ticks()
     
-    #donker grijze achtergrond, lichtgrijze parking en exit
-    screen.fill((30,30,30))
-    pygame.draw.rect(screen,(160,160,160),(marge,marge,vakje_size*vakje_aantal,vakje_size*vakje_aantal))
-    if exit_blocked == False:
-        pygame.draw.rect(screen,(0,250,0),exit_rect)
-    else:
-        pygame.draw.rect(screen,(250,0,0),exit_rect)
+    teken_background(exit_blocked)
     
-    #selected_car highlighten
     if selected_car:
-        if selected_car.oriëntatie == 'horizontaal':
-            if isinstance(selected_car,Reversed_car):
-                pygame.draw.rect(screen,(250,100,250),((selected_car.x*vakje_size)+marge-(vakje_size/12),(selected_car.y*vakje_size)+marge-(vakje_size/12),(selected_car.lengte*vakje_size)+(vakje_size/6),7*vakje_size/6),border_radius=5)
-            else:
-                pygame.draw.rect(screen,(150,250,50),((selected_car.x*vakje_size)+marge-(vakje_size/12),(selected_car.y*vakje_size)+marge-(vakje_size/12),(selected_car.lengte*vakje_size)+(vakje_size/6),7*vakje_size/6),border_radius=5)
-        else:
-            if isinstance(selected_car,Reversed_car):
-                pygame.draw.rect(screen,(250,100,250),((selected_car.x*vakje_size)+marge-(vakje_size/12),(selected_car.y*vakje_size)+marge-(vakje_size/12),7*vakje_size/6,(selected_car.lengte*vakje_size)+(vakje_size/6)),border_radius=5)
-            else:
-                pygame.draw.rect(screen,(150,250,50),((selected_car.x*vakje_size)+marge-(vakje_size/12),(selected_car.y*vakje_size)+marge-(vakje_size/12),7*vakje_size/6,(selected_car.lengte*vakje_size)+(vakje_size/6)),border_radius=5)
+        highlight_car(selected_car)
     
     for car in vehicles:
         teken_auto(car)
      
     if button_appear == True:
-        pygame.draw.rect(screen,(0,0,0),button_vakje)
-        pygame.draw.circle(screen,(250,0,0),(button_vakje.x + (vakje_size/2),button_vakje.y + (vakje_size/2)),vakje_size/6)
+        teken_button(button_vakje)
     
     if started == False:
         start_screen()
