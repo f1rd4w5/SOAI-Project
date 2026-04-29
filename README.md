@@ -311,6 +311,148 @@ def end_screen():
     screen.blit(text4,dest = (locationX4,locationY4))
     screen.blit(text5,dest = (locationX5,locationY5))
 
+def left_mouse_click():
+    global selected_car,button_appear,exit_blocked
+    pos = pygame.mouse.get_pos()
+    for car in vehicles:
+        if car.oriëntatie == 'horizontaal':
+            if ((car.x*vakje_size)+marge) < pos[0] < (((car.x*vakje_size)+marge)+(car.lengte*vakje_size)) and ((car.y*vakje_size)+marge) < pos[1] < (((car.y*vakje_size)+marge)+vakje_size):
+                selected_car = car
+        else:
+            if ((car.x*vakje_size)+marge) < pos[0] < (((car.x*vakje_size)+marge)+vakje_size) and ((car.y*vakje_size)+marge) < pos[1] < (((car.y*vakje_size)+marge)+(car.lengte*vakje_size)):
+                selected_car = car
+    if button_vakje.x < pos[0] < (button_vakje.x + vakje_size) and button_vakje.y < pos[1] < (button_vakje.y + vakje_size):
+        if button_appear == False and exit_blocked == True:
+            button_appear = True
+        elif math.sqrt(((pos[0] - (button_vakje.x + (vakje_size/2)))**2) + ((pos[1] - (button_vakje.y + (vakje_size/2)))**2)) < (vakje_size/6):
+            exit_blocked = False
+            
+def beweging_right():
+    global selected_car,beweging,politie,politie_begintijd,lose,win,exit_blocked,moves_level4
+    bezet = bezette_vakjes(vehicles,selected_car)
+    collision = False
+    for j in bezet:
+        if j == (selected_car.x + selected_car.lengte,selected_car.y):
+            collision = True
+    if selected_car.oriëntatie == 'horizontaal' and (selected_car.x + selected_car.lengte) <= vakje_max and collision == False:
+        selected_car.x += 1
+        beweging = True
+        if isinstance(selected_car,Police_car) and politie == False:
+            politie_sound.stop()
+            politie_sound.play()
+            politie = True
+            beweging = False
+            politie_begintijd = pygame.time.get_ticks()
+        if politie == True and beweging == True:
+            lose = True
+            politie_sound.stop()
+        if current_level == 7:
+            if button_appear == False and red_car.x == (vakje_max - red_car.lengte):
+                exit_blocked = True
+            if exit_blocked == True:
+                win = False
+            if button_appear == True and exit_blocked == False:
+                if red_car.x == (vakje_max - red_car.lengte + 1):
+                    win = True
+        else:
+            if red_car.x == (vakje_max - red_car.lengte + 1):
+                win = True
+        if current_level == 3:
+            moves_level4 -= 1
+            if moves_level4 == 0 and win == False:
+                lose = True
+
+def beweging_left():
+    global selected_car,beweging,politie,politie_begintijd,lose,moves_level4
+    bezet = bezette_vakjes(vehicles,selected_car)
+    collision = False
+    for j in bezet:
+        if j == (selected_car.x - 1,selected_car.y):
+            collision = True
+    if selected_car.oriëntatie == 'horizontaal' and (selected_car.x - 1) >= vakje_min and collision == False:
+        selected_car.x -= 1
+        beweging = True
+        if isinstance(selected_car,Police_car) and politie == False:
+            politie_sound.stop()
+            politie_sound.play()
+            politie = True
+            beweging = False
+            politie_begintijd = pygame.time.get_ticks()
+        if politie == True and beweging == True:
+            lose = True
+            politie_sound.stop()
+        if current_level == 3:
+            moves_level4 -= 1
+            if moves_level4 == 0:
+                lose = True
+
+def beweging_down():
+    global selected_car,beweging,politie,politie_begintijd,lose,moves_level4
+    bezet = bezette_vakjes(vehicles,selected_car)
+    collision = False
+    for j in bezet:
+        if j == (selected_car.x,selected_car.y + selected_car.lengte):
+            collision = True
+    if selected_car.oriëntatie == 'verticaal' and (selected_car.y + selected_car.lengte) <= vakje_max and collision == False:
+        selected_car.y += 1
+        beweging = True
+        if isinstance(selected_car,Police_car) and politie == False:
+            politie_sound.stop()
+            politie_sound.play()
+            politie = True
+            beweging = False
+            politie_begintijd = pygame.time.get_ticks()
+        if politie == True and beweging == True:
+            lose = True
+            politie_sound.stop()
+        if current_level == 3:
+            moves_level4 -= 1
+            if moves_level4 == 0:
+                lose = True
+                
+def beweging_up():
+    global selected_car,beweging,politie,politie_begintijd,lose,moves_level4
+    bezet = bezette_vakjes(vehicles,selected_car)
+    collision = False
+    for j in bezet:
+        if j == (selected_car.x,selected_car.y - 1):
+            collision = True
+    if selected_car.oriëntatie == 'verticaal' and (selected_car.y - 1) >= vakje_min and collision == False:
+        selected_car.y -= 1
+        beweging = True
+        if isinstance(selected_car,Police_car) and politie == False:
+            politie_sound.stop()
+            politie_sound.play()
+            politie = True
+            beweging = False
+            politie_begintijd = pygame.time.get_ticks()
+        if politie == True and beweging == True:
+            lose = True
+            politie_sound.stop()
+        if current_level == 3:
+            moves_level4 -= 1
+            if moves_level4 == 0:
+                lose = True
+
+def restart_level():
+    global timer_begin
+    index = 0
+    for car in levels[current_level]:
+        (car.x,car.y) = begin_posities[current_level][index]
+        index += 1
+    if current_level == 6:
+        timer_begin = pygame.time.get_ticks()
+        
+def next_level():
+    global einde,current_level,vehicles,timer_begin
+    if current_level == (aantal_levels - 1):
+        einde = True
+    else:
+        current_level += 1
+        vehicles = levels[current_level]
+        red_car.x,red_car.y = 0,3 
+        if current_level == 6:
+            timer_begin = pygame.time.get_ticks()
 
 running = True
 while running:
@@ -334,19 +476,7 @@ while running:
         
         if event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1:
-                pos = pygame.mouse.get_pos()
-                for car in vehicles:
-                    if car.oriëntatie == 'horizontaal':
-                        if ((car.x*vakje_size)+marge) < pos[0] < (((car.x*vakje_size)+marge)+(car.lengte*vakje_size)) and ((car.y*vakje_size)+marge) < pos[1] < (((car.y*vakje_size)+marge)+vakje_size):
-                            selected_car = car
-                    else:
-                        if ((car.x*vakje_size)+marge) < pos[0] < (((car.x*vakje_size)+marge)+vakje_size) and ((car.y*vakje_size)+marge) < pos[1] < (((car.y*vakje_size)+marge)+(car.lengte*vakje_size)):
-                            selected_car = car
-                if button_vakje.x < pos[0] < (button_vakje.x + vakje_size) and button_vakje.y < pos[1] < (button_vakje.y + vakje_size):
-                    if button_appear == False and exit_blocked == True:
-                        button_appear = True
-                    elif math.sqrt(((pos[0] - (button_vakje.x + (vakje_size/2)))**2) + ((pos[1] - (button_vakje.y + (vakje_size/2)))**2)) < (vakje_size/6):
-                        exit_blocked = False
+                left_mouse_click()
             
         if event.type == pygame.KEYDOWN:
             if selected_car:
@@ -360,103 +490,14 @@ while running:
                         key = pygame.K_UP
                     elif key == pygame.K_UP:
                         key = pygame.K_DOWN
-                bezet = bezette_vakjes(vehicles,selected_car)
-                
                 if key == pygame.K_RIGHT:
-                    collision = False
-                    for j in bezet:
-                        if j == (selected_car.x + selected_car.lengte,selected_car.y):
-                            collision = True
-                    if selected_car.oriëntatie == 'horizontaal' and (selected_car.x + selected_car.lengte) <= vakje_max and collision == False:
-                        selected_car.x += 1
-                        beweging = True
-                        if isinstance(selected_car,Police_car) and politie == False:
-                            politie_sound.stop()
-                            politie_sound.play()
-                            politie = True
-                            beweging = False
-                            politie_begintijd = pygame.time.get_ticks()
-                        if politie == True and beweging == True:
-                            lose = True
-                            politie_sound.stop()
-                        if current_level == 7:
-                            if button_appear == False and red_car.x == (vakje_max - red_car.lengte):
-                                exit_blocked = True
-                            if exit_blocked == True:
-                                win = False
-                            if button_appear == True and exit_blocked == False:
-                                if red_car.x == (vakje_max - red_car.lengte + 1):
-                                    win = True
-                        else:
-                            if red_car.x == (vakje_max - red_car.lengte + 1):
-                                win = True
-                        if current_level == 3:
-                            moves_level4 -= 1
-                            if moves_level4 == 0 and win == False:
-                                lose = True
+                    beweging_right()
                 elif key == pygame.K_LEFT:
-                    collision = False
-                    for j in bezet:
-                        if j == (selected_car.x - 1,selected_car.y):
-                            collision = True
-                    if selected_car.oriëntatie == 'horizontaal' and (selected_car.x - 1) >= vakje_min and collision == False:
-                        selected_car.x -= 1
-                        beweging = True
-                        if isinstance(selected_car,Police_car) and politie == False:
-                            politie_sound.stop()
-                            politie_sound.play()
-                            politie = True
-                            beweging = False
-                            politie_begintijd = pygame.time.get_ticks()
-                        if politie == True and beweging == True:
-                            lose = True
-                            politie_sound.stop()
-                        if current_level == 3:
-                            moves_level4 -= 1
-                            if moves_level4 == 0:
-                                lose = True
+                    beweging_left()
                 elif key == pygame.K_DOWN:
-                    collision = False
-                    for j in bezet:
-                        if j == (selected_car.x,selected_car.y + selected_car.lengte):
-                            collision = True
-                    if selected_car.oriëntatie == 'verticaal' and (selected_car.y + selected_car.lengte) <= vakje_max and collision == False:
-                        selected_car.y += 1
-                        beweging = True
-                        if isinstance(selected_car,Police_car) and politie == False:
-                            politie_sound.stop()
-                            politie_sound.play()
-                            politie = True
-                            beweging = False
-                            politie_begintijd = pygame.time.get_ticks()
-                        if politie == True and beweging == True:
-                            lose = True
-                            politie_sound.stop()
-                        if current_level == 3:
-                            moves_level4 -= 1
-                            if moves_level4 == 0:
-                                lose = True
+                    beweging_down()
                 elif key == pygame.K_UP:
-                    collision = False
-                    for j in bezet:
-                        if j == (selected_car.x,selected_car.y - 1):
-                            collision = True
-                    if selected_car.oriëntatie == 'verticaal' and (selected_car.y - 1) >= vakje_min and collision == False:
-                        selected_car.y -= 1
-                        beweging = True
-                        if isinstance(selected_car,Police_car) and politie == False:
-                            politie_sound.stop()
-                            politie_sound.play()
-                            politie = True
-                            beweging = False
-                            politie_begintijd = pygame.time.get_ticks()
-                        if politie == True and beweging == True:
-                            lose = True
-                            politie_sound.stop()
-                        if current_level == 3:
-                            moves_level4 -= 1
-                            if moves_level4 == 0:
-                                lose = True
+                    beweging_up()
             
             if started == False:
                 if event.key == pygame.K_s:
@@ -468,34 +509,17 @@ while running:
                     politie = False
                     timer_begin = None
                     beweging = False
-                    index = 0
-                    for car in levels[current_level]:
-                        (car.x,car.y) = begin_posities[current_level][index]
-                        index += 1
-                    if current_level == 6:
-                        timer_begin = pygame.time.get_ticks()
+                    restart_level()
 
             if win == True:
                 if event.key == pygame.K_SPACE:
                     win = False
-                    if current_level == (aantal_levels - 1):
-                        einde = True
-                    else:
-                        current_level += 1
-                        vehicles = levels[current_level]
-                        red_car.x,red_car.y = 0,3 
-                        if current_level == 6:
-                            timer_begin = pygame.time.get_ticks()
+                    next_level()
                         
             if lose == True:
                 if event.key == pygame.K_SPACE:
                     lose = False
-                    index = 0
-                    for car in levels[current_level]:
-                        (car.x,car.y) = begin_posities[current_level][index]
-                        index += 1
-                    if current_level == 6:
-                        timer_begin = pygame.time.get_ticks()
+                    restart_level()
     
     teken_background(exit_blocked)
     
