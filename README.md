@@ -3,15 +3,15 @@ import pygame
 pygame.init()
 pygame.mixer.init()
 
+#soundeffect van de politie en vaste tijden (in ms)
 politie_sound = pygame.mixer.Sound('C:/Users/firda/.spyder-py3/Politie sound.mp3')
 politie_duur = 10500
-
 timer_duur = 60000
 
 screen = pygame.display.set_mode([600,600])
 clock = pygame.time.Clock()
 
-#parameters, constanten en vaste lijsten
+#variabelen, constanten en vaste lijsten
 started = False
 selected_car = None
 win = False
@@ -54,7 +54,7 @@ class Reversed_car(Voertuig):
     def __init__(self,x,y,lengte,oriëntatie,color):
         super().__init__(x,y,lengte,oriëntatie,color)
 
-#vaste rode auto, lijst van voertuigen, en exit en button surface
+#vaste rode auto, politie auto en auto met reversed controls, en exit en button surface
 red_car = Voertuig(0,3,2,'horizontaal',(200,0,0))
 politie_car = Police_car(0,5,2,'verticaal',(230,230,230))
 reversed_auto = Reversed_car(5,5,2,'verticaal',(30,100,200))
@@ -89,9 +89,11 @@ level8_voertuigen = [red_car]
 
 levels = [level1_voertuigen,level2_voertuigen,level3_voertuigen,level4_voertuigen,level5_voertuigen,level6_voertuigen,level7_voertuigen,level8_voertuigen]
 
+#current_level 0 betekent level 1
 current_level = 0
 vehicles = levels[current_level]
 
+#lijst van de beginposities van de auto's
 begin_posities = []
 for i in range(aantal_levels):
     begin_posities_per_level = []
@@ -100,6 +102,7 @@ for i in range(aantal_levels):
         begin_posities_per_level.append((car_x_begin,car_y_begin))
     begin_posities.append(begin_posities_per_level)
 
+#functie voor de vakjes die door auto's bezet zijn
 def bezette_vakjes(lijst_voertuigen,selected_voertuig):
     bezet = []
     for car in lijst_voertuigen:
@@ -151,6 +154,7 @@ def start_screen():
     screen.blit(text7,dest = (locationX7,locationY7))
     screen.blit(text8,dest = (locationX8,locationY8))
     
+#functie om de achtergrond, de parking en de exit te tekenen
 def teken_background(exit_block):
     screen.fill((30,30,30))
     pygame.draw.rect(screen,(160,160,160),(marge,marge,vakje_size*vakje_aantal,vakje_size*vakje_aantal))
@@ -159,6 +163,7 @@ def teken_background(exit_block):
     else:
         pygame.draw.rect(screen,(250,0,0),exit_rect)
 
+#functie om alle teksten voor de levels te schrijven
 def level_info(level,moves,huidige,begin):
     font1 = pygame.font.Font(None,size = 35)
     font2 = pygame.font.Font(None,size = 25)
@@ -241,7 +246,7 @@ def teken_auto(vehicle):
             pygame.draw.rect(screen,(200,0,0),((vehicle.x*vakje_size)+marge+(vakje_size/4),(vehicle.y*vakje_size)+marge+(4*vakje_size/6),vakje_size/4,vakje_size/6))
             pygame.draw.rect(screen,(30,100,200),((vehicle.x*vakje_size)+marge+(vakje_size/2),(vehicle.y*vakje_size)+marge+(4*vakje_size/6),vakje_size/4,vakje_size/6))
   
-def highlight_car(vehicle):
+def highlight_auto(vehicle):
     if vehicle.oriëntatie == 'horizontaal':
         if isinstance(vehicle,Reversed_car):
             pygame.draw.rect(screen,(250,100,250),((vehicle.x*vakje_size)+marge-(vakje_size/12),(vehicle.y*vakje_size)+marge-(vakje_size/12),(vehicle.lengte*vakje_size)+(vakje_size/6),7*vakje_size/6),border_radius=5)
@@ -311,6 +316,7 @@ def end_screen():
     screen.blit(text4,dest = (locationX4,locationY4))
     screen.blit(text5,dest = (locationX5,locationY5))
 
+#functie voor de events als je op de left mouse click drukt
 def left_mouse_click():
     global selected_car,button_appear,exit_blocked
     pos = pygame.mouse.get_pos()
@@ -327,6 +333,29 @@ def left_mouse_click():
         elif math.sqrt(((pos[0] - (button_vakje.x + (vakje_size/2)))**2) + ((pos[1] - (button_vakje.y + (vakje_size/2)))**2)) < (vakje_size/6):
             exit_blocked = False
             
+#functie voor level 5 (met de politie)
+def politie_check():
+    global politie,beweging,politie_begintijd,lose
+    if isinstance(selected_car,Police_car) and politie == False:
+        politie_sound.stop()
+        politie_sound.play()
+        politie = True
+        beweging = False
+        politie_begintijd = pygame.time.get_ticks()
+    if politie == True and beweging == True:
+        lose = True
+        politie_sound.stop()
+   
+#functie voor level 4 (met beperkte bewegingen)
+def limited_moves():
+   global moves_level4,lose
+   if current_level == 3:
+       moves_level4 -= 1
+       if moves_level4 == 0 and win == False:
+           lose = True
+
+#de 4 functies voor de events als je met de arrows in de 4 richtingen beweegt
+
 def beweging_right():
     global selected_car,beweging,politie,politie_begintijd,lose,win,exit_blocked,moves_level4
     bezet = bezette_vakjes(vehicles,selected_car)
@@ -337,15 +366,7 @@ def beweging_right():
     if selected_car.oriëntatie == 'horizontaal' and (selected_car.x + selected_car.lengte) <= vakje_max and collision == False:
         selected_car.x += 1
         beweging = True
-        if isinstance(selected_car,Police_car) and politie == False:
-            politie_sound.stop()
-            politie_sound.play()
-            politie = True
-            beweging = False
-            politie_begintijd = pygame.time.get_ticks()
-        if politie == True and beweging == True:
-            lose = True
-            politie_sound.stop()
+        politie_check()
         if current_level == 7:
             if button_appear == False and red_car.x == (vakje_max - red_car.lengte):
                 exit_blocked = True
@@ -357,10 +378,7 @@ def beweging_right():
         else:
             if red_car.x == (vakje_max - red_car.lengte + 1):
                 win = True
-        if current_level == 3:
-            moves_level4 -= 1
-            if moves_level4 == 0 and win == False:
-                lose = True
+        limited_moves()
 
 def beweging_left():
     global selected_car,beweging,politie,politie_begintijd,lose,moves_level4
@@ -372,19 +390,8 @@ def beweging_left():
     if selected_car.oriëntatie == 'horizontaal' and (selected_car.x - 1) >= vakje_min and collision == False:
         selected_car.x -= 1
         beweging = True
-        if isinstance(selected_car,Police_car) and politie == False:
-            politie_sound.stop()
-            politie_sound.play()
-            politie = True
-            beweging = False
-            politie_begintijd = pygame.time.get_ticks()
-        if politie == True and beweging == True:
-            lose = True
-            politie_sound.stop()
-        if current_level == 3:
-            moves_level4 -= 1
-            if moves_level4 == 0:
-                lose = True
+        politie_check()
+        limited_moves()
 
 def beweging_down():
     global selected_car,beweging,politie,politie_begintijd,lose,moves_level4
@@ -396,19 +403,8 @@ def beweging_down():
     if selected_car.oriëntatie == 'verticaal' and (selected_car.y + selected_car.lengte) <= vakje_max and collision == False:
         selected_car.y += 1
         beweging = True
-        if isinstance(selected_car,Police_car) and politie == False:
-            politie_sound.stop()
-            politie_sound.play()
-            politie = True
-            beweging = False
-            politie_begintijd = pygame.time.get_ticks()
-        if politie == True and beweging == True:
-            lose = True
-            politie_sound.stop()
-        if current_level == 3:
-            moves_level4 -= 1
-            if moves_level4 == 0:
-                lose = True
+        politie_check()
+        limited_moves()
                 
 def beweging_up():
     global selected_car,beweging,politie,politie_begintijd,lose,moves_level4
@@ -420,19 +416,8 @@ def beweging_up():
     if selected_car.oriëntatie == 'verticaal' and (selected_car.y - 1) >= vakje_min and collision == False:
         selected_car.y -= 1
         beweging = True
-        if isinstance(selected_car,Police_car) and politie == False:
-            politie_sound.stop()
-            politie_sound.play()
-            politie = True
-            beweging = False
-            politie_begintijd = pygame.time.get_ticks()
-        if politie == True and beweging == True:
-            lose = True
-            politie_sound.stop()
-        if current_level == 3:
-            moves_level4 -= 1
-            if moves_level4 == 0:
-                lose = True
+        politie_check()
+        limited_moves()
 
 def restart_level():
     global timer_begin
@@ -454,17 +439,35 @@ def next_level():
         if current_level == 6:
             timer_begin = pygame.time.get_ticks()
 
+#functie om bepaalde states te resetten als je wint        
+def reset_state_win():
+    global selected_car,timer_begin
+    selected_car = None
+    timer_begin = None
+
+#functie om bepaalde states te resetten na lose of als je een level restart
+def reset_state_lose_restart():
+    global selected_car,moves_level4,politie,timer_begin,beweging
+    selected_car = None
+    moves_level4 = 12
+    politie = False
+    timer_begin = None
+    beweging = False
+    
+
 running = True
 while running:
 
     clock.tick(20)
     
+    #detecteert wanneer de sound effect voor de politie gestopt is
     if politie == True and politie_begintijd != None:
         huidige_tijd_politie = pygame.time.get_ticks()
         if huidige_tijd_politie - politie_begintijd > politie_duur:
             politie = False
             politie_begintijd = None
-            
+        
+    #detecteert wanneer de tijd van de timer om is 
     if timer_begin:
         huidige_tijd_timer = pygame.time.get_ticks()
         if huidige_tijd_timer - timer_begin > timer_duur:
@@ -481,6 +484,7 @@ while running:
         if event.type == pygame.KEYDOWN:
             if selected_car:
                 key = event.key
+                #wisselt de keys voor de reversed auto
                 if isinstance(selected_car,Reversed_car):
                     if key == pygame.K_RIGHT:
                         key = pygame.K_LEFT
@@ -499,16 +503,15 @@ while running:
                 elif key == pygame.K_UP:
                     beweging_up()
             
+            #begint het spel
             if started == False:
                 if event.key == pygame.K_s:
                     started = True
                     
+            #reset de level
             if started == True and lose == False and win == False:
                 if event.key == pygame.K_r:
-                    selected_car = None
-                    politie = False
-                    timer_begin = None
-                    beweging = False
+                    reset_state_lose_restart()
                     restart_level()
 
             if win == True:
@@ -524,7 +527,7 @@ while running:
     teken_background(exit_blocked)
     
     if selected_car:
-        highlight_car(selected_car)
+        highlight_auto(selected_car)
     
     for car in vehicles:
         teken_auto(car)
@@ -539,16 +542,11 @@ while running:
         level_info(current_level,moves_level4,huidige_tijd_timer,timer_begin)
     
     if win == True:
-        selected_car = None
-        timer_begin = None
+        reset_state_win()
         win_animatie()
     
     if lose == True:
-        selected_car = None
-        moves_level4 = 12
-        politie = False
-        timer_begin = None
-        beweging = False
+        reset_state_lose_restart()
         lose_animatie()
     
     if einde == True:
