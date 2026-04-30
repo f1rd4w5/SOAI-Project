@@ -1,3 +1,4 @@
+import random
 import math
 import pygame
 pygame.init()
@@ -34,9 +35,14 @@ vakje_min = 0
 vakje_max = 6
 marge = 90
 pixels = 600
-kleuren = [(30,150,50),(30,100,200),(250,250,60),(200,100,50),(200,0,100)]
 lengtes = [2,3]
-oriëntaties = ['horizontaal','verticaal']   
+oriëntaties = ['horizontaal','verticaal'] 
+kleuren = [(30,150,50),(30,100,200),(250,250,60),(200,100,50),(200,0,100)]
+x_posities = [0,1,2,3,4,5,6]
+y_posities = [0,1,2,3,4,5,6] 
+aantal_auto_makkelijk = 8
+aantal_auto_matig = 10
+aantal_auto_moeilijk = 12 
 
 class Voertuig:
     def __init__(self,x,y,lengte,oriëntatie,color):
@@ -61,33 +67,154 @@ reversed_auto = Reversed_car(5,5,2,'verticaal',(30,100,200))
 exit_rect = pygame.Rect(marge+(7*vakje_size)-(vakje_size/6),marge+(3*vakje_size),vakje_size/6,vakje_size)
 button_vakje = pygame.Rect((button_coördinaat[0]*vakje_size)+marge,(button_coördinaat[1]*vakje_size)+marge,vakje_size,vakje_size)
 
-#zelfgemaakte voertuigen om spel te testen
-car1 = Voertuig(2,3,2,'verticaal',(30,150,50))
-car2 = Voertuig(1,4,3,'verticaal',(250,250,60))
-car3 = Voertuig(3,5,3,'horizontaal',(200,0,100))
-car4 = Voertuig(1,4,2,'verticaal',(200,100,50))
-car5 = Voertuig(3,1,2,'horizontaal',(30,100,200))
-car6 = Voertuig(1,4,3,'horizontaal',(30,150,50))
-car7 = Voertuig(1,4,3,'horizontaal',(30,150,50))
-car8 = Voertuig(4,0,3,'verticaal',(30,100,200))
-car9 = Voertuig(0,0,2,'verticaal',(200,0,100))
-car10 = Voertuig(4,0,3,'verticaal',(30,100,200))
-car11 = Voertuig(4,1,2,'horizontaal',(30,150,50))
-car12 = Voertuig(0,5,3,'horizontaal',(250,250,60))
-car13 = Voertuig(0,5,3,'horizontaal',(200,100,50))
-car14 = Voertuig(2,0,2,'verticaal',(30,150,50))
-
-#zelfgemaakte lijsten van voertuigen voor de levels om spel te testen
-level1_voertuigen = [red_car,car1,car2]
-level2_voertuigen = [red_car,car3,car4]
-level3_voertuigen = [red_car,car5,car6]
-level4_voertuigen = [red_car,car7,car8]
-level5_voertuigen = [red_car,politie_car,car9,car10]
-level6_voertuigen = [red_car,reversed_auto,car11,car12]
-level7_voertuigen = [red_car,car13,car14]
+level1_voertuigen = [red_car]
+level2_voertuigen = [red_car]
+level3_voertuigen = [red_car]
+level4_voertuigen = [red_car]
+level5_voertuigen = [red_car]
+level6_voertuigen = [red_car]
+level7_voertuigen = [red_car]
 level8_voertuigen = [red_car]
 
 levels = [level1_voertuigen,level2_voertuigen,level3_voertuigen,level4_voertuigen,level5_voertuigen,level6_voertuigen,level7_voertuigen,level8_voertuigen]
+
+def genereer_auto(level_voertuigen):
+    lengte = None
+    oriëntatie = None
+    color = None
+    x = None
+    y = None
+    teller = 0
+    
+    genereer = True
+    while genereer == True:
+        kans_lengte = random.random()
+        if kans_lengte < 0.5:
+            lengte = lengtes[0]
+        else:
+            lengte = lengtes[1]
+
+        oriëntatie_lengte = random.random()
+        if oriëntatie_lengte < 0.5:
+            oriëntatie = oriëntaties[0]
+        else:
+            oriëntatie = oriëntaties[1]
+
+        kans_color = random.random()
+        if kans_color < 0.2:
+            color = kleuren[0]
+        elif 0.2 <= kans_color < 0.4:
+            color = kleuren[1]
+        elif 0.4 <= kans_color < 0.6:
+            color = kleuren[2]
+        elif 0.6 <= kans_color < 0.8:
+            color = kleuren[3]
+        else:
+            color = kleuren[4]
+            
+        kans_x = random.random()
+        if kans_x < (1/7):
+            x = x_posities[0]
+        elif (1/7) <= kans_x < (2/7):
+            x = x_posities[1]
+        elif (2/7) <= kans_x < (3/7):
+            x = x_posities[2]
+        elif (3/7) <= kans_x < (4/7):
+            x = x_posities[3]
+        elif (4/7) <= kans_x < (5/7):
+            x = x_posities[4]
+        elif (5/7) <= kans_x < (6/7):
+            x = x_posities[5]
+        else:
+            x = x_posities[6]
+            
+        kans_y = random.random()
+        if kans_y < (1/7):
+            y = y_posities[0]
+        elif (1/7) <= kans_y < (2/7):
+            y = y_posities[1]
+        elif (2/7) <= kans_y < (3/7):
+            y = y_posities[2]
+        elif (3/7) <= kans_y < (4/7):
+            y = y_posities[3]
+        elif (4/7) <= kans_y < (5/7):
+            y = y_posities[4]
+        elif (5/7) <= kans_y < (6/7):
+            y = y_posities[5]
+        else:
+            y = y_posities[6]
+
+        auto = Voertuig(x,y,lengte,oriëntatie,color)
+
+        auto_vakjes = []
+        if auto.oriëntatie == 'horizontaal':
+            auto_vakjes.append((auto.x,auto.y))
+            for i in range(auto.lengte - 1):
+                auto_vakjes.append((auto.x + 1 + i,auto.y))
+        else:
+            auto_vakjes.append((auto.x,auto.y))
+            for i in range(auto.lengte - 1):
+                auto_vakjes.append((auto.x,auto.y + 1 + i))
+          
+        buiten_grid = False
+        for i in range(len(auto_vakjes)):
+            if auto_vakjes[i][0] > 6:
+                buiten_grid = True
+                break
+            if auto_vakjes[i][1] > 6:
+                buiten_grid = True
+                break
+                
+        bezet = []
+        for car in level_voertuigen:
+            if car.oriëntatie == 'horizontaal':
+                bezet.append((car.x,car.y))
+                for i in range(car.lengte - 1):
+                    bezet.append((car.x + 1 + i,car.y))
+            else:
+                bezet.append((car.x,car.y))
+                for i in range(car.lengte - 1):
+                    bezet.append((car.x,car.y + 1 + i))
+         
+        is_bezet = False           
+        for vak in auto_vakjes:
+            if vak in bezet:
+                is_bezet = True
+                break
+                    
+        auto_blocked = False
+        if auto.oriëntatie == 'horizontaal' and auto.y == 3:
+            auto_blocked = True
+            
+        if is_bezet == False and buiten_grid == False and auto_blocked == False:
+            level_voertuigen.append(auto)
+            genereer = False
+        
+        teller += 1 
+        if teller == 100:
+            print('Too many attempts at generating a level')
+            break
+        
+for i in range(aantal_auto_makkelijk):
+    genereer_auto(level1_voertuigen)
+    
+for i in range(aantal_auto_matig):
+    genereer_auto(level2_voertuigen)
+
+for i in range(aantal_auto_moeilijk):
+    genereer_auto(level3_voertuigen)
+    
+for i in range(aantal_auto_matig):
+    genereer_auto(level4_voertuigen)
+
+for i in range(aantal_auto_matig):
+    genereer_auto(level5_voertuigen)
+    
+for i in range(aantal_auto_matig):
+    genereer_auto(level6_voertuigen)
+    
+for i in range(aantal_auto_moeilijk):
+    genereer_auto(level7_voertuigen)
 
 #current_level 0 betekent level 1
 current_level = 0
