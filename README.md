@@ -26,7 +26,6 @@ timer_begin = None
 moves_level4 = 12
 exit_blocked = False
 button_appear = False
-button_coördinaat = (0,0)
 einde = False
 aantal_levels = 8
 vakje_size = 60
@@ -43,6 +42,8 @@ y_posities = [0,1,2,3,4,5,6]
 aantal_auto_makkelijk = 8
 aantal_auto_matig = 10
 aantal_auto_moeilijk = 12 
+aantal_politie_auto = 2
+aantal_reversed_auto = 2
 
 class Voertuig:
     def __init__(self,x,y,lengte,oriëntatie,color):
@@ -60,10 +61,18 @@ class Reversed_car(Voertuig):
     def __init__(self,x,y,lengte,oriëntatie,color):
         super().__init__(x,y,lengte,oriëntatie,color)
 
-#vaste rode auto, politie auto en auto met reversed controls, en exit en button surface
+kans_button = random.random()
+if kans_button < 0.25:
+    button_coördinaat = (0,0) 
+elif 0.25 <= kans_button < 0.5:
+    button_coördinaat = (0,6)
+elif 0.5 <= kans_button < 0.75:
+    button_coördinaat = (6,0)
+else:
+    button_coördinaat = (6,6)    
+
+#vaste rode auto, en exit en button surface
 red_car = Voertuig(0,3,2,'horizontaal',(200,0,0))
-politie_car = Police_car(0,5,2,'verticaal',(230,230,230))
-reversed_auto = Reversed_car(5,5,2,'verticaal',(30,100,200))
 exit_rect = pygame.Rect(marge+(7*vakje_size)-(vakje_size/6),marge+(3*vakje_size),vakje_size/6,vakje_size)
 button_vakje = pygame.Rect((button_coördinaat[0]*vakje_size)+marge,(button_coördinaat[1]*vakje_size)+marge,vakje_size,vakje_size)
 
@@ -78,71 +87,76 @@ level8_voertuigen = [red_car]
 
 levels = [level1_voertuigen,level2_voertuigen,level3_voertuigen,level4_voertuigen,level5_voertuigen,level6_voertuigen,level7_voertuigen,level8_voertuigen]
 
-def genereer_auto(level_voertuigen):
+def genereer_eigenschappen():
     lengte = None
     oriëntatie = None
     color = None
     x = None
     y = None
-    teller = 0
     
+    kans_lengte = random.random()
+    if kans_lengte < 0.5:
+        lengte = lengtes[0]
+    else:
+        lengte = lengtes[1]
+
+    oriëntatie_lengte = random.random()
+    if oriëntatie_lengte < 0.5:
+        oriëntatie = oriëntaties[0]
+    else:
+        oriëntatie = oriëntaties[1]
+
+    kans_color = random.random()
+    if kans_color < 0.2:
+        color = kleuren[0]
+    elif 0.2 <= kans_color < 0.4:
+        color = kleuren[1]
+    elif 0.4 <= kans_color < 0.6:
+        color = kleuren[2]
+    elif 0.6 <= kans_color < 0.8:
+        color = kleuren[3]
+    else:
+        color = kleuren[4]
+        
+    kans_x = random.random()
+    if kans_x < (1/7):
+        x = x_posities[0]
+    elif (1/7) <= kans_x < (2/7):
+        x = x_posities[1]
+    elif (2/7) <= kans_x < (3/7):
+        x = x_posities[2]
+    elif (3/7) <= kans_x < (4/7):
+        x = x_posities[3]
+    elif (4/7) <= kans_x < (5/7):
+        x = x_posities[4]
+    elif (5/7) <= kans_x < (6/7):
+        x = x_posities[5]
+    else:
+        x = x_posities[6]
+        
+    kans_y = random.random()
+    if kans_y < (1/7):
+        y = y_posities[0]
+    elif (1/7) <= kans_y < (2/7):
+        y = y_posities[1]
+    elif (2/7) <= kans_y < (3/7):
+        y = y_posities[2]
+    elif (3/7) <= kans_y < (4/7):
+        y = y_posities[3]
+    elif (4/7) <= kans_y < (5/7):
+        y = y_posities[4]
+    elif (5/7) <= kans_y < (6/7):
+        y = y_posities[5]
+    else:
+        y = y_posities[6]
+        
+    return x,y,lengte,oriëntatie,color
+
+def genereer_auto(level_voertuigen):
+    teller = 0
     genereer = True
     while genereer == True:
-        kans_lengte = random.random()
-        if kans_lengte < 0.5:
-            lengte = lengtes[0]
-        else:
-            lengte = lengtes[1]
-
-        oriëntatie_lengte = random.random()
-        if oriëntatie_lengte < 0.5:
-            oriëntatie = oriëntaties[0]
-        else:
-            oriëntatie = oriëntaties[1]
-
-        kans_color = random.random()
-        if kans_color < 0.2:
-            color = kleuren[0]
-        elif 0.2 <= kans_color < 0.4:
-            color = kleuren[1]
-        elif 0.4 <= kans_color < 0.6:
-            color = kleuren[2]
-        elif 0.6 <= kans_color < 0.8:
-            color = kleuren[3]
-        else:
-            color = kleuren[4]
-            
-        kans_x = random.random()
-        if kans_x < (1/7):
-            x = x_posities[0]
-        elif (1/7) <= kans_x < (2/7):
-            x = x_posities[1]
-        elif (2/7) <= kans_x < (3/7):
-            x = x_posities[2]
-        elif (3/7) <= kans_x < (4/7):
-            x = x_posities[3]
-        elif (4/7) <= kans_x < (5/7):
-            x = x_posities[4]
-        elif (5/7) <= kans_x < (6/7):
-            x = x_posities[5]
-        else:
-            x = x_posities[6]
-            
-        kans_y = random.random()
-        if kans_y < (1/7):
-            y = y_posities[0]
-        elif (1/7) <= kans_y < (2/7):
-            y = y_posities[1]
-        elif (2/7) <= kans_y < (3/7):
-            y = y_posities[2]
-        elif (3/7) <= kans_y < (4/7):
-            y = y_posities[3]
-        elif (4/7) <= kans_y < (5/7):
-            y = y_posities[4]
-        elif (5/7) <= kans_y < (6/7):
-            y = y_posities[5]
-        else:
-            y = y_posities[6]
+        x,y,lengte,oriëntatie,color = genereer_eigenschappen()
 
         auto = Voertuig(x,y,lengte,oriëntatie,color)
 
@@ -194,7 +208,121 @@ def genereer_auto(level_voertuigen):
         if teller == 100:
             print('Too many attempts at generating a level')
             break
+  
+def genereer_politie_auto(level_voertuigen):
+    teller = 0
+    genereer = True
+    while genereer == True:
+        x,y,lengte,oriëntatie,color = genereer_eigenschappen()
+
+        auto = Police_car(x,y,2,oriëntatie,(230,230,230))
+
+        auto_vakjes = []
+        if auto.oriëntatie == 'horizontaal':
+            auto_vakjes.append((auto.x,auto.y))
+            for i in range(auto.lengte - 1):
+                auto_vakjes.append((auto.x + 1 + i,auto.y))
+        else:
+            auto_vakjes.append((auto.x,auto.y))
+            for i in range(auto.lengte - 1):
+                auto_vakjes.append((auto.x,auto.y + 1 + i))
+          
+        buiten_grid = False
+        for i in range(len(auto_vakjes)):
+            if auto_vakjes[i][0] > 6:
+                buiten_grid = True
+                break
+            if auto_vakjes[i][1] > 6:
+                buiten_grid = True
+                break
+                
+        bezet = []
+        for car in level_voertuigen:
+            if car.oriëntatie == 'horizontaal':
+                bezet.append((car.x,car.y))
+                for i in range(car.lengte - 1):
+                    bezet.append((car.x + 1 + i,car.y))
+            else:
+                bezet.append((car.x,car.y))
+                for i in range(car.lengte - 1):
+                    bezet.append((car.x,car.y + 1 + i))
+         
+        is_bezet = False           
+        for vak in auto_vakjes:
+            if vak in bezet:
+                is_bezet = True
+                break
+                    
+        auto_blocked = False
+        if auto.oriëntatie == 'horizontaal' and auto.y == 3:
+            auto_blocked = True
+            
+        if is_bezet == False and buiten_grid == False and auto_blocked == False:
+            level_voertuigen.append(auto)
+            genereer = False
         
+        teller += 1 
+        if teller == 100:
+            print('Too many attempts at generating a level')
+            break
+        
+def genereer_reversed_auto(level_voertuigen):
+    teller = 0
+    genereer = True
+    while genereer == True:
+        x,y,lengte,oriëntatie,color = genereer_eigenschappen()
+
+        auto = Reversed_car(x,y,lengte,oriëntatie,color)
+
+        auto_vakjes = []
+        if auto.oriëntatie == 'horizontaal':
+            auto_vakjes.append((auto.x,auto.y))
+            for i in range(auto.lengte - 1):
+                auto_vakjes.append((auto.x + 1 + i,auto.y))
+        else:
+            auto_vakjes.append((auto.x,auto.y))
+            for i in range(auto.lengte - 1):
+                auto_vakjes.append((auto.x,auto.y + 1 + i))
+          
+        buiten_grid = False
+        for i in range(len(auto_vakjes)):
+            if auto_vakjes[i][0] > 6:
+                buiten_grid = True
+                break
+            if auto_vakjes[i][1] > 6:
+                buiten_grid = True
+                break
+                
+        bezet = []
+        for car in level_voertuigen:
+            if car.oriëntatie == 'horizontaal':
+                bezet.append((car.x,car.y))
+                for i in range(car.lengte - 1):
+                    bezet.append((car.x + 1 + i,car.y))
+            else:
+                bezet.append((car.x,car.y))
+                for i in range(car.lengte - 1):
+                    bezet.append((car.x,car.y + 1 + i))
+         
+        is_bezet = False           
+        for vak in auto_vakjes:
+            if vak in bezet:
+                is_bezet = True
+                break
+                    
+        auto_blocked = False
+        if auto.oriëntatie == 'horizontaal' and auto.y == 3:
+            auto_blocked = True
+            
+        if is_bezet == False and buiten_grid == False and auto_blocked == False:
+            level_voertuigen.append(auto)
+            genereer = False
+        
+        teller += 1 
+        if teller == 100:
+            print('Too many attempts at generating a level')
+            break
+
 for i in range(aantal_auto_makkelijk):
     genereer_auto(level1_voertuigen)
     
@@ -207,11 +335,17 @@ for i in range(aantal_auto_moeilijk):
 for i in range(aantal_auto_matig):
     genereer_auto(level4_voertuigen)
 
-for i in range(aantal_auto_matig):
+for i in range(aantal_auto_matig - aantal_politie_auto):
     genereer_auto(level5_voertuigen)
+
+for i in range(aantal_politie_auto):
+    genereer_politie_auto(level5_voertuigen)
     
-for i in range(aantal_auto_matig):
+for i in range(aantal_auto_moeilijk - aantal_reversed_auto):
     genereer_auto(level6_voertuigen)
+    
+for i in range(aantal_reversed_auto):
+    genereer_reversed_auto(level6_voertuigen)
     
 for i in range(aantal_auto_moeilijk):
     genereer_auto(level7_voertuigen)
