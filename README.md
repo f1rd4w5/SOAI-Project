@@ -196,17 +196,16 @@ def genereer_auto(level_voertuigen):
             if vak in bezet:
                 is_bezet = True
                 break
-                    
-        auto_blocked = False
+        
         if auto.oriëntatie == 'horizontaal' and auto.y == 3:
-            auto_blocked = True
+            continue
             
-        if is_bezet == False and buiten_grid == False and auto_blocked == False:
+        if is_bezet == False and buiten_grid == False:
             level_voertuigen.append(auto)
             genereer = False
         
         teller += 1 
-        if teller == 100:
+        if teller == 5000:
             print('Too many attempts at generating a level')
             break
   
@@ -254,16 +253,15 @@ def genereer_politie_auto(level_voertuigen):
                 is_bezet = True
                 break
                     
-        auto_blocked = False
         if auto.oriëntatie == 'horizontaal' and auto.y == 3:
-            auto_blocked = True
+            continue
             
-        if is_bezet == False and buiten_grid == False and auto_blocked == False:
+        if is_bezet == False and buiten_grid == False:
             level_voertuigen.append(auto)
             genereer = False
         
         teller += 1 
-        if teller == 100:
+        if teller == 5000:
             print('Too many attempts at generating a level')
             break
         
@@ -311,16 +309,15 @@ def genereer_reversed_auto(level_voertuigen):
                 is_bezet = True
                 break
                     
-        auto_blocked = False
         if auto.oriëntatie == 'horizontaal' and auto.y == 3:
-            auto_blocked = True
+            continue
             
-        if is_bezet == False and buiten_grid == False and auto_blocked == False:
+        if is_bezet == False and buiten_grid == False:
             level_voertuigen.append(auto)
             genereer = False
         
         teller += 1 
-        if teller == 100:
+        if teller == 5000:
             print('Too many attempts at generating a level')
             break
 
@@ -344,22 +341,31 @@ def bezette_vakjes_voor_solver(level,state):
 def solver(level):
     vehicles = levels[level]
     
-    q = queue.Queue()
-    visited = set()
+    pq = queue.PriorityQueue()
+    visited = {}
+    
+    begin_g = 0
     
     begin_state = []
     for car in vehicles:
         positie = (car.x,car.y)
         begin_state.append(positie)
-        
+    
+    begin_priority = vakje_max - (begin_state[0][0] + red_car.lengte - 1)
+    
     begin_state_tuple = tuple(begin_state)
-    q.put(begin_state_tuple)
+    
+    pq.put((begin_priority,begin_g,begin_state_tuple))
 
-    visited = {begin_state_tuple}
+    visited = {begin_state_tuple:begin_g}
             
-    while not q.empty():
-        current_state = q.get()
-        new_state = list(current_state)
+    while not pq.empty():
+        current_state = pq.get()
+        priority,g,state = current_state
+        new_state = list(state)
+        
+        if visited[state] < g:
+            continue
             
         mogelijke_moves = []
         index = 0
@@ -401,36 +407,51 @@ def solver(level):
         for auto,move in mogelijke_moves:
             index = 0
             for car in vehicles:
-                if auto != car:
-                    index += 1 
-                if move == 'right':
-                    new_state = list(current_state)
-                    x,y = new_state[index]
-                    new_state[index] = (x+1,y) 
-                    if tuple(new_state) not in visited:
-                        visited.add(tuple(new_state))
-                        q.put(tuple(new_state))
-                elif move == 'left':
-                    new_state = list(current_state)
-                    x,y = new_state[index]
-                    new_state[index] = (x-1,y) 
-                    if tuple(new_state) not in visited:
-                        visited.add(tuple(new_state))
-                        q.put(tuple(new_state))
-                elif move == 'down':
-                    new_state = list(current_state)
-                    x,y = new_state[index]
-                    new_state[index] = (x,y+1) 
-                    if tuple(new_state) not in visited:
-                        visited.add(tuple(new_state))
-                        q.put(tuple(new_state))
+                if auto == car:
+                    break
                 else:
-                    new_state = list(current_state)
-                    x,y = new_state[index]
-                    new_state[index] = (x,y-1)  
-                    if tuple(new_state) not in visited:
-                        visited.add(tuple(new_state))
-                        q.put(tuple(new_state))
+                    index += 1
+            if move == 'right':
+                new_state = list(state)
+                x,y = new_state[index]
+                new_state[index] = (x+1,y) 
+                new_g = g + 1
+                if tuple(new_state) not in visited or new_g < visited[tuple(new_state)]:
+                    visited[tuple(new_state)] = new_g
+                    h = vakje_max - (new_state[0][0] + red_car.lengte - 1)
+                    new_priority = new_g + h
+                    pq.put((new_priority,new_g,tuple(new_state)))
+            elif move == 'left':
+                new_state = list(state)
+                x,y = new_state[index]
+                new_state[index] = (x-1,y) 
+                new_g = g + 1 
+                if tuple(new_state) not in visited or new_g < visited[tuple(new_state)]:
+                    visited[tuple(new_state)] = new_g
+                    h = vakje_max - (new_state[0][0] + red_car.lengte - 1)
+                    new_priority = new_g + h
+                    pq.put((new_priority,new_g,tuple(new_state)))
+            elif move == 'down':
+                new_state = list(state)
+                x,y = new_state[index]
+                new_state[index] = (x,y+1) 
+                new_g = g + 1
+                if tuple(new_state) not in visited or new_g < visited[tuple(new_state)]:
+                    visited[tuple(new_state)] = new_g
+                    h = vakje_max - (new_state[0][0] + red_car.lengte - 1)
+                    new_priority = new_g + h
+                    pq.put((new_priority,new_g,tuple(new_state)))
+            else:
+                new_state = list(state)
+                x,y = new_state[index]
+                new_state[index] = (x,y-1) 
+                new_g = g + 1
+                if tuple(new_state) not in visited or new_g < visited[tuple(new_state)]:
+                    visited[tuple(new_state)] = new_g
+                    h = vakje_max - (new_state[0][0] + red_car.lengte - 1)
+                    new_priority = new_g + h
+                    pq.put((new_priority,new_g,tuple(new_state)))
+                
     return False
 
 oplossing = False
@@ -440,6 +461,8 @@ while oplossing == False:
     check = solver(0)
     if check == True:
         oplossing = True
+    else:
+        level1_voertuigen = [red_car]
         
 oplossing = False
 while oplossing == False:
@@ -448,6 +471,8 @@ while oplossing == False:
     check = solver(1)
     if check == True:
         oplossing = True
+    else:
+        level2_voertuigen = [red_car]
     
 oplossing = False
 while oplossing == False:
@@ -456,6 +481,8 @@ while oplossing == False:
     check = solver(2)
     if check == True:
         oplossing = True
+    else:
+        level3_voertuigen = [red_car]
 
 oplossing = False
 while oplossing == False:
@@ -464,6 +491,8 @@ while oplossing == False:
     check = solver(3)
     if check == True:
         oplossing = True
+    else:
+        level4_voertuigen = [red_car]
     
 oplossing = False
 while oplossing == False:
@@ -474,6 +503,8 @@ while oplossing == False:
     check = solver(4)
     if check == True:
         oplossing = True
+    else:
+        level5_voertuigen = [red_car]
 
 oplossing = False
 while oplossing == False:
@@ -484,6 +515,8 @@ while oplossing == False:
     check = solver(5)
     if check == True:
         oplossing = True
+    else:
+        level6_voertuigen = [red_car]
     
 oplossing = False
 while oplossing == False:
@@ -492,6 +525,8 @@ while oplossing == False:
     check = solver(6)
     if check == True:
         oplossing = True
+    else:
+        level7_voertuigen = [red_car]
 
 #current_level 0 betekent level 1
 current_level = 0
