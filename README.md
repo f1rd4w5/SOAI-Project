@@ -1,4 +1,5 @@
 import random
+import queue
 import math
 import pygame
 pygame.init()
@@ -323,32 +324,174 @@ def genereer_reversed_auto(level_voertuigen):
             print('Too many attempts at generating a level')
             break
 
-for i in range(aantal_auto_makkelijk):
-    genereer_auto(level1_voertuigen)
-    
-for i in range(aantal_auto_matig):
-    genereer_auto(level2_voertuigen)
+def bezette_vakjes_voor_solver(level,state):
+    vehicles = levels[level]
+    bezet = []
+    index2 = 0
+    for auto in vehicles:
+        x2,y2 = state[index2]
+        if auto.oriëntatie == 'horizontaal':
+            bezet.append((x2,y2))
+            for i in range(auto.lengte - 1):
+                bezet.append((x2 + 1 + i,y2))
+        else:
+            bezet.append((x2,y2))
+            for i in range(auto.lengte - 1):
+                bezet.append((x2,y2 + 1 + i)) 
+        index2 += 1
+    return bezet
 
-for i in range(aantal_auto_moeilijk):
-    genereer_auto(level3_voertuigen)
+def solver(level):
+    vehicles = levels[level]
     
-for i in range(aantal_auto_matig):
-    genereer_auto(level4_voertuigen)
+    q = queue.Queue()
+    visited = set()
+    
+    begin_state = []
+    for car in vehicles:
+        positie = (car.x,car.y)
+        begin_state.append(positie)
+        
+    begin_state_tuple = tuple(begin_state)
+    q.put(begin_state_tuple)
 
-for i in range(aantal_auto_matig - aantal_politie_auto):
-    genereer_auto(level5_voertuigen)
+    visited = {begin_state_tuple}
+            
+    while not q.empty():
+        current_state = q.get()
+        new_state = list(current_state)
+            
+        mogelijke_moves = []
+        index = 0
+        
+        if new_state[0][0] + red_car.lengte - 1 == vakje_max:
+            return True
+        
+        bezet = set(bezette_vakjes_voor_solver(level,new_state))
+        
+        for car in vehicles:
+            x,y = new_state[index]
+            
+            collision = False
+            if (x + car.lengte,y) in bezet:
+                collision = True
+            if car.oriëntatie == 'horizontaal' and (x + car.lengte) <= vakje_max and collision == False:
+                mogelijke_moves.append((car,'right'))
 
-for i in range(aantal_politie_auto):
-    genereer_politie_auto(level5_voertuigen)
+            collision = False
+            if (x - 1,y) in bezet:
+                collision = True
+            if car.oriëntatie == 'horizontaal' and (x - 1) >= vakje_min and collision == False:
+                mogelijke_moves.append((car,'left'))
+
+            collision = False
+            if (x,y + car.lengte) in bezet:
+                collision = True
+            if car.oriëntatie == 'verticaal' and (y + car.lengte) <= vakje_max and collision == False:
+                mogelijke_moves.append((car,'down'))
+
+            collision = False
+            if (x,y - 1) in bezet:
+                collision = True
+            if car.oriëntatie == 'verticaal' and (y - 1) >= vakje_min and collision == False:
+                mogelijke_moves.append((car,'up'))
+            
+            index += 1
+            
+        for auto,move in mogelijke_moves:
+            index = 0
+            for car in vehicles:
+                if auto != car:
+                    index += 1 
+                if move == 'right':
+                    new_state = list(current_state)
+                    x,y = new_state[index]
+                    new_state[index] = (x+1,y) 
+                    if tuple(new_state) not in visited:
+                        visited.add(tuple(new_state))
+                        q.put(tuple(new_state))
+                elif move == 'left':
+                    new_state = list(current_state)
+                    x,y = new_state[index]
+                    new_state[index] = (x-1,y) 
+                    if tuple(new_state) not in visited:
+                        visited.add(tuple(new_state))
+                        q.put(tuple(new_state))
+                elif move == 'down':
+                    new_state = list(current_state)
+                    x,y = new_state[index]
+                    new_state[index] = (x,y+1) 
+                    if tuple(new_state) not in visited:
+                        visited.add(tuple(new_state))
+                        q.put(tuple(new_state))
+                else:
+                    new_state = list(current_state)
+                    x,y = new_state[index]
+                    new_state[index] = (x,y-1)  
+                    if tuple(new_state) not in visited:
+                        visited.add(tuple(new_state))
+                        q.put(tuple(new_state))
+    return False
+
+oplossing = False
+while oplossing == False:
+    for i in range(aantal_auto_makkelijk):
+        genereer_auto(level1_voertuigen)
+    check = solver(0)
+    if check == True:
+        oplossing = True
+        
+oplossing = False
+while oplossing == False:
+    for i in range(aantal_auto_matig):
+        genereer_auto(level2_voertuigen)
+    check = solver(1)
+    if check == True:
+        oplossing = True
     
-for i in range(aantal_auto_moeilijk - aantal_reversed_auto):
-    genereer_auto(level6_voertuigen)
+oplossing = False
+while oplossing == False:
+    for i in range(aantal_auto_moeilijk):
+        genereer_auto(level3_voertuigen)
+    check = solver(2)
+    if check == True:
+        oplossing = True
+
+oplossing = False
+while oplossing == False:
+    for i in range(aantal_auto_matig):
+        genereer_auto(level4_voertuigen)
+    check = solver(3)
+    if check == True:
+        oplossing = True
     
-for i in range(aantal_reversed_auto):
-    genereer_reversed_auto(level6_voertuigen)
+oplossing = False
+while oplossing == False:
+    for i in range(aantal_auto_matig - aantal_politie_auto):
+        genereer_auto(level5_voertuigen)
+    for i in range(aantal_politie_auto):
+        genereer_politie_auto(level5_voertuigen)
+    check = solver(4)
+    if check == True:
+        oplossing = True
+
+oplossing = False
+while oplossing == False:
+    for i in range(aantal_auto_moeilijk - aantal_reversed_auto):
+        genereer_auto(level6_voertuigen)
+    for i in range(aantal_reversed_auto):
+        genereer_reversed_auto(level6_voertuigen)
+    check = solver(5)
+    if check == True:
+        oplossing = True
     
-for i in range(aantal_auto_moeilijk):
-    genereer_auto(level7_voertuigen)
+oplossing = False
+while oplossing == False:
+    for i in range(aantal_auto_moeilijk):
+        genereer_auto(level7_voertuigen)
+    check = solver(6)
+    if check == True:
+        oplossing = True
 
 #current_level 0 betekent level 1
 current_level = 0
@@ -367,15 +510,14 @@ for i in range(aantal_levels):
 def bezette_vakjes(lijst_voertuigen,selected_voertuig):
     bezet = []
     for car in lijst_voertuigen:
-        if car != selected_voertuig:
-            if car.oriëntatie == 'horizontaal':
-                bezet.append((car.x,car.y))
-                for i in range(car.lengte - 1):
-                    bezet.append((car.x + 1 + i,car.y))
-            else:
-                bezet.append((car.x,car.y))
-                for i in range(car.lengte - 1):
-                    bezet.append((car.x,car.y + 1 + i))
+        if car.oriëntatie == 'horizontaal':
+            bezet.append((car.x,car.y))
+            for i in range(car.lengte - 1):
+                bezet.append((car.x + 1 + i,car.y))
+        else:
+            bezet.append((car.x,car.y))
+            for i in range(car.lengte - 1):
+                bezet.append((car.x,car.y + 1 + i))
     return bezet
 
 def start_screen():
