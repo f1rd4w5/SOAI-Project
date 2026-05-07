@@ -8,7 +8,7 @@ pygame.mixer.init()
 #soundeffect van de politie en vaste tijden (in ms)
 politie_sound = pygame.mixer.Sound('C:/Users/firda/.spyder-py3/Politie sound.mp3')
 politie_duur = 10500
-timer_duur = 60000
+timer_duur = 20000
 
 screen = pygame.display.set_mode([600,600])
 clock = pygame.time.Clock()
@@ -24,7 +24,6 @@ politie_begintijd = None
 huidige_tijd_politie = None
 huidige_tijd_timer = None
 timer_begin = None
-moves_level4 = 12
 exit_blocked = False
 button_appear = False
 einde = False
@@ -41,8 +40,8 @@ kleuren = [(30,150,50),(30,100,200),(250,250,60),(200,100,50),(200,0,100)]
 x_posities = [0,1,2,3,4,5,6]
 y_posities = [0,1,2,3,4,5,6] 
 aantal_auto_makkelijk = 8
-aantal_auto_matig = 10
-aantal_auto_moeilijk = 12 
+aantal_auto_matig = 11
+aantal_auto_moeilijk = 13 
 aantal_politie_auto = 2
 aantal_reversed_auto = 2
 
@@ -371,7 +370,7 @@ def solver(level):
         index = 0
         
         if new_state[0][0] + red_car.lengte - 1 == vakje_max:
-            return True
+            return True,g
         
         bezet = set(bezette_vakjes_voor_solver(level,new_state))
         
@@ -418,7 +417,11 @@ def solver(level):
                 new_g = g + 1
                 if tuple(new_state) not in visited or new_g < visited[tuple(new_state)]:
                     visited[tuple(new_state)] = new_g
-                    h = vakje_max - (new_state[0][0] + red_car.lengte - 1)
+                    blokkerende_auto = 0
+                    for i in range(len(bezet)):
+                        if (i,3) in bezet:
+                            blokkerende_auto += 1
+                    h = vakje_max - (new_state[0][0] + red_car.lengte - 1) + blokkerende_auto
                     new_priority = new_g + h
                     pq.put((new_priority,new_g,tuple(new_state)))
             elif move == 'left':
@@ -428,7 +431,11 @@ def solver(level):
                 new_g = g + 1 
                 if tuple(new_state) not in visited or new_g < visited[tuple(new_state)]:
                     visited[tuple(new_state)] = new_g
-                    h = vakje_max - (new_state[0][0] + red_car.lengte - 1)
+                    blokkerende_auto = 0
+                    for i in range(len(bezet)):
+                        if (i,3) in bezet:
+                            blokkerende_auto += 1
+                    h = vakje_max - (new_state[0][0] + red_car.lengte - 1) + blokkerende_auto
                     new_priority = new_g + h
                     pq.put((new_priority,new_g,tuple(new_state)))
             elif move == 'down':
@@ -438,7 +445,11 @@ def solver(level):
                 new_g = g + 1
                 if tuple(new_state) not in visited or new_g < visited[tuple(new_state)]:
                     visited[tuple(new_state)] = new_g
-                    h = vakje_max - (new_state[0][0] + red_car.lengte - 1)
+                    blokkerende_auto = 0
+                    for i in range(len(bezet)):
+                        if (i,3) in bezet:
+                            blokkerende_auto += 1
+                    h = vakje_max - (new_state[0][0] + red_car.lengte - 1) + blokkerende_auto
                     new_priority = new_g + h
                     pq.put((new_priority,new_g,tuple(new_state)))
             else:
@@ -448,17 +459,21 @@ def solver(level):
                 new_g = g + 1
                 if tuple(new_state) not in visited or new_g < visited[tuple(new_state)]:
                     visited[tuple(new_state)] = new_g
-                    h = vakje_max - (new_state[0][0] + red_car.lengte - 1)
+                    blokkerende_auto = 0
+                    for i in range(len(bezet)):
+                        if (i,3) in bezet:
+                            blokkerende_auto += 1
+                    h = vakje_max - (new_state[0][0] + red_car.lengte - 1) + blokkerende_auto
                     new_priority = new_g + h
                     pq.put((new_priority,new_g,tuple(new_state)))
                 
-    return False
+    return False,None
 
 oplossing = False
 while oplossing == False:
     for i in range(aantal_auto_makkelijk):
         genereer_auto(level1_voertuigen)
-    check = solver(0)
+    check,minimum_moves = solver(0)
     if check == True:
         oplossing = True
     else:
@@ -468,7 +483,7 @@ oplossing = False
 while oplossing == False:
     for i in range(aantal_auto_matig):
         genereer_auto(level2_voertuigen)
-    check = solver(1)
+    check,minimum_moves = solver(1)
     if check == True:
         oplossing = True
     else:
@@ -478,7 +493,7 @@ oplossing = False
 while oplossing == False:
     for i in range(aantal_auto_moeilijk):
         genereer_auto(level3_voertuigen)
-    check = solver(2)
+    check,minimum_moves = solver(2)
     if check == True:
         oplossing = True
     else:
@@ -488,9 +503,10 @@ oplossing = False
 while oplossing == False:
     for i in range(aantal_auto_matig):
         genereer_auto(level4_voertuigen)
-    check = solver(3)
-    if check == True:
+    check,minimum_moves = solver(3)
+    if check == True and minimum_moves != None:
         oplossing = True
+        moves_level4 = minimum_moves + 2
     else:
         level4_voertuigen = [red_car]
     
@@ -500,7 +516,7 @@ while oplossing == False:
         genereer_auto(level5_voertuigen)
     for i in range(aantal_politie_auto):
         genereer_politie_auto(level5_voertuigen)
-    check = solver(4)
+    check,minimum_moves = solver(4)
     if check == True:
         oplossing = True
     else:
@@ -512,7 +528,7 @@ while oplossing == False:
         genereer_auto(level6_voertuigen)
     for i in range(aantal_reversed_auto):
         genereer_reversed_auto(level6_voertuigen)
-    check = solver(5)
+    check,minimum_moves = solver(5)
     if check == True:
         oplossing = True
     else:
@@ -522,7 +538,7 @@ oplossing = False
 while oplossing == False:
     for i in range(aantal_auto_moeilijk):
         genereer_auto(level7_voertuigen)
-    check = solver(6)
+    check,minimum_moves = solver(6)
     if check == True:
         oplossing = True
     else:
@@ -636,7 +652,7 @@ def level_info(level,moves,huidige,begin):
     elif level == 6:
         text2 = font2.render("Hurry up! The gate's going to close!",True,(250,250,250))
         if lose == False and win == False and huidige != None and begin != None:
-            text6 = font1.render(f"Time left: {60 - ((huidige - begin)//1000)} seconds",True,(250,250,250))
+            text6 = font1.render(f"Time left: {20 - ((huidige - begin)//1000)} seconds",True,(250,250,250))
             locationX6 = (pixels/2) - (text6.get_width()/2)
             locationY6 = (7*pixels/8)
             screen.blit(text6,dest = (locationX6,locationY6))
