@@ -1,3 +1,4 @@
+#de opstarttijd duurt in het algemeen enkele seconden
 import random
 import queue
 import math
@@ -5,10 +6,10 @@ import pygame
 pygame.init()
 pygame.mixer.init()
 
-#soundeffect van de politie en vaste tijden (in ms)
+#soundeffect van de politie en vaste tijden (in ms) (de bestandspad voor de politie soundeffect moet worden aangepast naar jouw pc)
 politie_sound = pygame.mixer.Sound('C:/Users/firda/.spyder-py3/Politie sound.mp3')
 politie_duur = 10500
-timer_duur = 20000
+timer_duur = 30000
 
 screen = pygame.display.set_mode([600,600])
 clock = pygame.time.Clock()
@@ -28,7 +29,7 @@ exit_blocked = False
 button_appear = False
 einde = False
 aantal_levels = 8
-vakje_size = 60
+vakje_size = 60 #er wordt gebruikgemaakt van een grid-systeem van 7x7 vakjes
 vakje_aantal = 7
 vakje_min = 0
 vakje_max = 6
@@ -42,9 +43,10 @@ y_posities = [0,1,2,3,4,5,6]
 aantal_auto_makkelijk = 8
 aantal_auto_matig = 11
 aantal_auto_moeilijk = 13 
-aantal_politie_auto = 2
-aantal_reversed_auto = 2
+aantal_politie_auto = 3
+aantal_reversed_auto = 4
 
+#hoofdklasse van de voertuigen (ook gebruikt voor de 'normale' voertuigen)
 class Voertuig:
     def __init__(self,x,y,lengte,oriëntatie,color):
         self.x = x
@@ -53,14 +55,17 @@ class Voertuig:
         self.oriëntatie = oriëntatie
         self.color = color
 
+#subklasse voor politie auto
 class Police_car(Voertuig):
     def __init__(self,x,y,lengte,oriëntatie,color):
         super().__init__(x,y,lengte,oriëntatie,color)
 
+#subklasse voor auto met reversed controls
 class Reversed_car(Voertuig):
     def __init__(self,x,y,lengte,oriëntatie,color):
         super().__init__(x,y,lengte,oriëntatie,color)
 
+#random generatie van de positie van de button voor level 8
 kans_button = random.random()
 if kans_button < 0.25:
     button_coördinaat = (0,0) 
@@ -76,6 +81,7 @@ red_car = Voertuig(0,3,2,'horizontaal',(200,0,0))
 exit_rect = pygame.Rect(marge+(7*vakje_size)-(vakje_size/6),marge+(3*vakje_size),vakje_size/6,vakje_size)
 button_vakje = pygame.Rect((button_coördinaat[0]*vakje_size)+marge,(button_coördinaat[1]*vakje_size)+marge,vakje_size,vakje_size)
 
+#lijst van voertuigen voor de levels (die tijdens de random generatie wordt aangepast, behalve level 8)
 level1_voertuigen = [red_car]
 level2_voertuigen = [red_car]
 level3_voertuigen = [red_car]
@@ -85,9 +91,11 @@ level6_voertuigen = [red_car]
 level7_voertuigen = [red_car]
 level8_voertuigen = [red_car]
 
+#lijst van alle levels
 levels = [level1_voertuigen,level2_voertuigen,level3_voertuigen,level4_voertuigen,level5_voertuigen,level6_voertuigen,level7_voertuigen,level8_voertuigen]
 
 def genereer_eigenschappen():
+    """genereert de eigenschappen van een auto"""
     lengte = None
     oriëntatie = None
     color = None
@@ -152,49 +160,53 @@ def genereer_eigenschappen():
         
     return x,y,lengte,oriëntatie,color
 
+def generatie_check(auto,level_voertuigen):
+    """checkt of de gegenereerde auto volledig in de parking is en niet op een andere auto staat"""
+    auto_vakjes = []
+    if auto.oriëntatie == 'horizontaal':
+        auto_vakjes.append((auto.x,auto.y))
+        for i in range(auto.lengte - 1):
+            auto_vakjes.append((auto.x + 1 + i,auto.y))
+    else:
+        auto_vakjes.append((auto.x,auto.y))
+        for i in range(auto.lengte - 1):
+            auto_vakjes.append((auto.x,auto.y + 1 + i))
+      
+    buiten_grid = False
+    for i in range(len(auto_vakjes)):
+        if auto_vakjes[i][0] > 6:
+            buiten_grid = True
+            break
+        if auto_vakjes[i][1] > 6:
+            buiten_grid = True
+            break
+            
+    bezet = []
+    for car in level_voertuigen:
+        if car.oriëntatie == 'horizontaal':
+            bezet.append((car.x,car.y))
+            for i in range(car.lengte - 1):
+                bezet.append((car.x + 1 + i,car.y))
+        else:
+            bezet.append((car.x,car.y))
+            for i in range(car.lengte - 1):
+                bezet.append((car.x,car.y + 1 + i))
+     
+    is_bezet = False           
+    for vak in auto_vakjes:
+        if vak in bezet:
+            is_bezet = True
+            break
+    return is_bezet,buiten_grid
+    
 def genereer_auto(level_voertuigen):
+    """genereert een 'normale' auto als het volledig in de parking is en niet op een andere auto staat"""
     teller = 0
     genereer = True
     while genereer == True:
         x,y,lengte,oriëntatie,color = genereer_eigenschappen()
-
         auto = Voertuig(x,y,lengte,oriëntatie,color)
-
-        auto_vakjes = []
-        if auto.oriëntatie == 'horizontaal':
-            auto_vakjes.append((auto.x,auto.y))
-            for i in range(auto.lengte - 1):
-                auto_vakjes.append((auto.x + 1 + i,auto.y))
-        else:
-            auto_vakjes.append((auto.x,auto.y))
-            for i in range(auto.lengte - 1):
-                auto_vakjes.append((auto.x,auto.y + 1 + i))
-          
-        buiten_grid = False
-        for i in range(len(auto_vakjes)):
-            if auto_vakjes[i][0] > 6:
-                buiten_grid = True
-                break
-            if auto_vakjes[i][1] > 6:
-                buiten_grid = True
-                break
-                
-        bezet = []
-        for car in level_voertuigen:
-            if car.oriëntatie == 'horizontaal':
-                bezet.append((car.x,car.y))
-                for i in range(car.lengte - 1):
-                    bezet.append((car.x + 1 + i,car.y))
-            else:
-                bezet.append((car.x,car.y))
-                for i in range(car.lengte - 1):
-                    bezet.append((car.x,car.y + 1 + i))
-         
-        is_bezet = False           
-        for vak in auto_vakjes:
-            if vak in bezet:
-                is_bezet = True
-                break
+        is_bezet,buiten_grid = generatie_check(auto,level_voertuigen)
         
         if auto.oriëntatie == 'horizontaal' and auto.y == 3:
             continue
@@ -209,48 +221,13 @@ def genereer_auto(level_voertuigen):
             break
   
 def genereer_politie_auto(level_voertuigen):
+    """genereert een politie auto als het volledig in de parking is en niet op een andere auto staat"""
     teller = 0
     genereer = True
     while genereer == True:
         x,y,lengte,oriëntatie,color = genereer_eigenschappen()
-
         auto = Police_car(x,y,2,oriëntatie,(230,230,230))
-
-        auto_vakjes = []
-        if auto.oriëntatie == 'horizontaal':
-            auto_vakjes.append((auto.x,auto.y))
-            for i in range(auto.lengte - 1):
-                auto_vakjes.append((auto.x + 1 + i,auto.y))
-        else:
-            auto_vakjes.append((auto.x,auto.y))
-            for i in range(auto.lengte - 1):
-                auto_vakjes.append((auto.x,auto.y + 1 + i))
-          
-        buiten_grid = False
-        for i in range(len(auto_vakjes)):
-            if auto_vakjes[i][0] > 6:
-                buiten_grid = True
-                break
-            if auto_vakjes[i][1] > 6:
-                buiten_grid = True
-                break
-                
-        bezet = []
-        for car in level_voertuigen:
-            if car.oriëntatie == 'horizontaal':
-                bezet.append((car.x,car.y))
-                for i in range(car.lengte - 1):
-                    bezet.append((car.x + 1 + i,car.y))
-            else:
-                bezet.append((car.x,car.y))
-                for i in range(car.lengte - 1):
-                    bezet.append((car.x,car.y + 1 + i))
-         
-        is_bezet = False           
-        for vak in auto_vakjes:
-            if vak in bezet:
-                is_bezet = True
-                break
+        is_bezet,buiten_grid = generatie_check(auto,level_voertuigen)
                     
         if auto.oriëntatie == 'horizontaal' and auto.y == 3:
             continue
@@ -265,48 +242,13 @@ def genereer_politie_auto(level_voertuigen):
             break
         
 def genereer_reversed_auto(level_voertuigen):
+    """genereert een reversed auto als het volledig in de parking is en niet op een andere auto staat"""
     teller = 0
     genereer = True
     while genereer == True:
         x,y,lengte,oriëntatie,color = genereer_eigenschappen()
-
         auto = Reversed_car(x,y,lengte,oriëntatie,color)
-
-        auto_vakjes = []
-        if auto.oriëntatie == 'horizontaal':
-            auto_vakjes.append((auto.x,auto.y))
-            for i in range(auto.lengte - 1):
-                auto_vakjes.append((auto.x + 1 + i,auto.y))
-        else:
-            auto_vakjes.append((auto.x,auto.y))
-            for i in range(auto.lengte - 1):
-                auto_vakjes.append((auto.x,auto.y + 1 + i))
-          
-        buiten_grid = False
-        for i in range(len(auto_vakjes)):
-            if auto_vakjes[i][0] > 6:
-                buiten_grid = True
-                break
-            if auto_vakjes[i][1] > 6:
-                buiten_grid = True
-                break
-                
-        bezet = []
-        for car in level_voertuigen:
-            if car.oriëntatie == 'horizontaal':
-                bezet.append((car.x,car.y))
-                for i in range(car.lengte - 1):
-                    bezet.append((car.x + 1 + i,car.y))
-            else:
-                bezet.append((car.x,car.y))
-                for i in range(car.lengte - 1):
-                    bezet.append((car.x,car.y + 1 + i))
-         
-        is_bezet = False           
-        for vak in auto_vakjes:
-            if vak in bezet:
-                is_bezet = True
-                break
+        is_bezet,buiten_grid = generatie_check(auto,level_voertuigen)
                     
         if auto.oriëntatie == 'horizontaal' and auto.y == 3:
             continue
@@ -321,23 +263,37 @@ def genereer_reversed_auto(level_voertuigen):
             break
 
 def bezette_vakjes_voor_solver(level,state):
+    """berekent de bezette vakjes door de auto's van de 'gesimuleerde' state van de solver"""
     vehicles = levels[level]
     bezet = []
-    index2 = 0
+    index = 0
     for auto in vehicles:
-        x2,y2 = state[index2]
+        x,y = state[index]
         if auto.oriëntatie == 'horizontaal':
-            bezet.append((x2,y2))
+            bezet.append((x,y))
             for i in range(auto.lengte - 1):
-                bezet.append((x2 + 1 + i,y2))
+                bezet.append((x + 1 + i,y))
         else:
-            bezet.append((x2,y2))
+            bezet.append((x,y))
             for i in range(auto.lengte - 1):
-                bezet.append((x2,y2 + 1 + i)) 
-        index2 += 1
+                bezet.append((x,y + 1 + i)) 
+        index += 1
     return bezet
 
+def move_check_voor_solver(new_state,visited,new_g,bezet,pq):
+    """checkt of een state na een bepaalde move in visited is om een loop te voorkomen, en als niet (of als de state beter is dan die al in visited) dan wordt die in visited en in de queue toegevoegd"""
+    if tuple(new_state) not in visited or new_g < visited[tuple(new_state)]:
+        visited[tuple(new_state)] = new_g
+        blokkerende_vakje = 0
+        for i in range(len(bezet)):
+            if (i,red_car.y) in bezet:
+                blokkerende_vakje += 1
+        h = vakje_max - (new_state[0][0] + red_car.lengte - 1) + blokkerende_vakje
+        new_priority = new_g + h #de priority is de som van het aantal uitgevoerde moves, de afstand van de red car tot de laatste vak (de exit), en het aantal vakjes die de red car blokkeren (dus de bezette vakjes op de rij van de red car)
+        pq.put((new_priority,new_g,tuple(new_state)))
+
 def solver(level):
+    """checkt of de gegenereerde level oplosbaar is en als ja, worden 'True' en het minimum aantal moves gereturnd"""
     vehicles = levels[level]
     
     pq = queue.PriorityQueue()
@@ -377,6 +333,7 @@ def solver(level):
         for car in vehicles:
             x,y = new_state[index]
             
+            #checkt of een auto in een bepaalde richting kan bewegen (checkt oriëntatie, collision en buiten-grid)
             collision = False
             if (x + car.lengte,y) in bezet:
                 collision = True
@@ -415,60 +372,29 @@ def solver(level):
                 x,y = new_state[index]
                 new_state[index] = (x+1,y) 
                 new_g = g + 1
-                if tuple(new_state) not in visited or new_g < visited[tuple(new_state)]:
-                    visited[tuple(new_state)] = new_g
-                    blokkerende_auto = 0
-                    for i in range(len(bezet)):
-                        if (i,3) in bezet:
-                            blokkerende_auto += 1
-                    h = vakje_max - (new_state[0][0] + red_car.lengte - 1) + blokkerende_auto
-                    new_priority = new_g + h
-                    pq.put((new_priority,new_g,tuple(new_state)))
+                move_check_voor_solver(new_state,visited,new_g,bezet,pq)
             elif move == 'left':
                 new_state = list(state)
                 x,y = new_state[index]
                 new_state[index] = (x-1,y) 
                 new_g = g + 1 
-                if tuple(new_state) not in visited or new_g < visited[tuple(new_state)]:
-                    visited[tuple(new_state)] = new_g
-                    blokkerende_auto = 0
-                    for i in range(len(bezet)):
-                        if (i,3) in bezet:
-                            blokkerende_auto += 1
-                    h = vakje_max - (new_state[0][0] + red_car.lengte - 1) + blokkerende_auto
-                    new_priority = new_g + h
-                    pq.put((new_priority,new_g,tuple(new_state)))
+                move_check_voor_solver(new_state,visited,new_g,bezet,pq)
             elif move == 'down':
                 new_state = list(state)
                 x,y = new_state[index]
                 new_state[index] = (x,y+1) 
                 new_g = g + 1
-                if tuple(new_state) not in visited or new_g < visited[tuple(new_state)]:
-                    visited[tuple(new_state)] = new_g
-                    blokkerende_auto = 0
-                    for i in range(len(bezet)):
-                        if (i,3) in bezet:
-                            blokkerende_auto += 1
-                    h = vakje_max - (new_state[0][0] + red_car.lengte - 1) + blokkerende_auto
-                    new_priority = new_g + h
-                    pq.put((new_priority,new_g,tuple(new_state)))
+                move_check_voor_solver(new_state,visited,new_g,bezet,pq)
             else:
                 new_state = list(state)
                 x,y = new_state[index]
                 new_state[index] = (x,y-1) 
                 new_g = g + 1
-                if tuple(new_state) not in visited or new_g < visited[tuple(new_state)]:
-                    visited[tuple(new_state)] = new_g
-                    blokkerende_auto = 0
-                    for i in range(len(bezet)):
-                        if (i,3) in bezet:
-                            blokkerende_auto += 1
-                    h = vakje_max - (new_state[0][0] + red_car.lengte - 1) + blokkerende_auto
-                    new_priority = new_g + h
-                    pq.put((new_priority,new_g,tuple(new_state)))
+                move_check_voor_solver(new_state,visited,new_g,bezet,pq)
                 
     return False,None
 
+#alle levels (behalve level 8) genereren
 oplossing = False
 while oplossing == False:
     for i in range(aantal_auto_makkelijk):
@@ -506,7 +432,7 @@ while oplossing == False:
     check,minimum_moves = solver(3)
     if check == True and minimum_moves != None:
         oplossing = True
-        moves_level4 = minimum_moves + 2
+        moves_level4 = minimum_moves + 2 #het beperkt aantal moves bij level 4 hangt af van het minimum aantal moves van de level (bepaald door de solver)
     else:
         level4_voertuigen = [red_car]
     
@@ -544,7 +470,7 @@ while oplossing == False:
     else:
         level7_voertuigen = [red_car]
 
-#current_level 0 betekent level 1
+#current_level = 0 betekent level 1
 current_level = 0
 vehicles = levels[current_level]
 
@@ -557,8 +483,8 @@ for i in range(aantal_levels):
         begin_posities_per_level.append((car_x_begin,car_y_begin))
     begin_posities.append(begin_posities_per_level)
 
-#functie voor de vakjes die door auto's bezet zijn
-def bezette_vakjes(lijst_voertuigen,selected_voertuig):
+def bezette_vakjes(lijst_voertuigen):
+    """berekent de bezette vakjes door de auto's van een bepaalde level"""
     bezet = []
     for car in lijst_voertuigen:
         if car.oriëntatie == 'horizontaal':
@@ -572,6 +498,7 @@ def bezette_vakjes(lijst_voertuigen,selected_voertuig):
     return bezet
 
 def start_screen():
+    """maakt de start screen"""
     screen.fill((30,30,30))
     font1 = pygame.font.Font(None,size = 100)
     font2 = pygame.font.Font(None,size = 30)
@@ -608,8 +535,8 @@ def start_screen():
     screen.blit(text7,dest = (locationX7,locationY7))
     screen.blit(text8,dest = (locationX8,locationY8))
     
-#functie om de achtergrond, de parking en de exit te tekenen
 def teken_background(exit_block):
+    """tekent de achtergrond, de parking en de exit"""
     screen.fill((30,30,30))
     pygame.draw.rect(screen,(160,160,160),(marge,marge,vakje_size*vakje_aantal,vakje_size*vakje_aantal))
     if exit_block == False:
@@ -617,8 +544,8 @@ def teken_background(exit_block):
     else:
         pygame.draw.rect(screen,(250,0,0),exit_rect)
 
-#functie om alle teksten voor de levels te schrijven
 def level_info(level,moves,huidige,begin):
+    """schrijft alle teksten voor de levels"""
     font1 = pygame.font.Font(None,size = 35)
     font2 = pygame.font.Font(None,size = 25)
     font3 = pygame.font.Font(None,size = 20)
@@ -652,7 +579,7 @@ def level_info(level,moves,huidige,begin):
     elif level == 6:
         text2 = font2.render("Hurry up! The gate's going to close!",True,(250,250,250))
         if lose == False and win == False and huidige != None and begin != None:
-            text6 = font1.render(f"Time left: {20 - ((huidige - begin)//1000)} seconds",True,(250,250,250))
+            text6 = font1.render(f"Time left: {(timer_duur//1000) - ((huidige - begin)//1000)} seconds",True,(250,250,250))
             locationX6 = (pixels/2) - (text6.get_width()/2)
             locationY6 = (7*pixels/8)
             screen.blit(text6,dest = (locationX6,locationY6))
@@ -667,6 +594,7 @@ def level_info(level,moves,huidige,begin):
     screen.blit(text2,dest = (locationX2,locationY2))
 
 def teken_auto(vehicle):
+    """tekent auto afhankelijk van oriëntatie en type ('normale' of politie auto)"""
     if vehicle.oriëntatie == 'horizontaal':
         pygame.draw.rect(screen,vehicle.color,((vehicle.x*vakje_size)+marge,(vehicle.y*vakje_size)+marge,vehicle.lengte*vakje_size,vakje_size),border_radius=5)
         pygame.draw.rect(screen,(130,220,250),(((vehicle.x+vehicle.lengte)*vakje_size)+marge-(5*vakje_size/12),(vehicle.y*vakje_size)+marge+((vakje_size-(5*vakje_size/6))/2),vakje_size/3,5*vakje_size/6),border_radius=3)
@@ -701,6 +629,7 @@ def teken_auto(vehicle):
             pygame.draw.rect(screen,(30,100,200),((vehicle.x*vakje_size)+marge+(vakje_size/2),(vehicle.y*vakje_size)+marge+(4*vakje_size/6),vakje_size/4,vakje_size/6))
   
 def highlight_auto(vehicle):
+    """tekent een grotere rechthoek onder de selected car die fungeert als 'highlight', bij reversed auto is de rechthoek roosachtig, en bij andere is het geelachtig"""
     if vehicle.oriëntatie == 'horizontaal':
         if isinstance(vehicle,Reversed_car):
             pygame.draw.rect(screen,(250,100,250),((vehicle.x*vakje_size)+marge-(vakje_size/12),(vehicle.y*vakje_size)+marge-(vakje_size/12),(vehicle.lengte*vakje_size)+(vakje_size/6),7*vakje_size/6),border_radius=5)
@@ -713,10 +642,12 @@ def highlight_auto(vehicle):
             pygame.draw.rect(screen,(150,250,50),((vehicle.x*vakje_size)+marge-(vakje_size/12),(vehicle.y*vakje_size)+marge-(vakje_size/12),7*vakje_size/6,(vehicle.lengte*vakje_size)+(vakje_size/6)),border_radius=5)
 
 def teken_button(button_vak):
+    """tekent de button surface en de button voor level 8"""
     pygame.draw.rect(screen,(0,0,0),button_vak)
     pygame.draw.circle(screen,(250,0,0),(button_vak.x + (vakje_size/2),button_vak.y + (vakje_size/2)),vakje_size/6)
 
 def win_animatie():
+    """maakt scherm bij win"""
     pygame.draw.rect(screen,(0,250,0),(marge,marge,vakje_size*vakje_aantal,vakje_size*vakje_aantal))
     font1 = pygame.font.Font(None,size = 100)
     font2 = pygame.font.Font(None,size = 30)
@@ -733,6 +664,7 @@ def win_animatie():
     screen.blit(text2,dest = (locationX2,locationY2))
     
 def lose_animatie():
+    """maakt scherm bij lose"""
     pygame.draw.rect(screen,(250,0,0),(marge,marge,vakje_size*vakje_aantal,vakje_size*vakje_aantal))
     font1 = pygame.font.Font(None,size = 100)
     font2 = pygame.font.Font(None,size = 30)
@@ -746,6 +678,7 @@ def lose_animatie():
     screen.blit(text2,dest = (locationX2,locationY2))
 
 def end_screen():
+    """maakt end screen"""
     screen.fill((30,30,30))
     font1 = pygame.font.Font(None,size = 70)
     font2 = pygame.font.Font(None,size = 35)
@@ -770,8 +703,8 @@ def end_screen():
     screen.blit(text4,dest = (locationX4,locationY4))
     screen.blit(text5,dest = (locationX5,locationY5))
 
-#functie voor de events als je op de left mouse click drukt
 def left_mouse_click():
+    """selecteert een bepaalde auto als je erop drukt met de left mouse click en maakt de button in level 8 zichtbaar als je met left mouse click op de positie van de button surface drukt"""
     global selected_car,button_appear,exit_blocked
     pos = pygame.mouse.get_pos()
     for car in vehicles:
@@ -787,8 +720,8 @@ def left_mouse_click():
         elif math.sqrt(((pos[0] - (button_vakje.x + (vakje_size/2)))**2) + ((pos[1] - (button_vakje.y + (vakje_size/2)))**2)) < (vakje_size/6):
             exit_blocked = False
             
-#functie voor level 5 (met de politie)
 def politie_check():
+    """(level 5: politie) speelt de politie soundeffect af als je de politie auto beweegt en detecteert beweging tijdens het afspelen waarbij de speler verliest (lose)"""
     global politie,beweging,politie_begintijd,lose
     if isinstance(selected_car,Police_car) and politie == False:
         politie_sound.stop()
@@ -800,19 +733,18 @@ def politie_check():
         lose = True
         politie_sound.stop()
    
-#functie voor level 4 (met beperkte bewegingen)
 def limited_moves():
+   """(level 4: beperkte moves) -1 per move en als je geen move meer hebt dan verlies je"""
    global moves_level4,lose
    if current_level == 3:
        moves_level4 -= 1
        if moves_level4 == 0 and win == False:
            lose = True
 
-#de 4 functies voor de events als je met de arrows in de 4 richtingen beweegt
-
 def beweging_right():
+    """checkt voor collision en geen buiten-grid beweging om naar rechts te bewegen, checkt ook als de red car op de laatste vak zit om te winnen (behalve bij level 8: de exit wordt eerst geblokkeerd totdat je op de button drukt, en nadien wordt gecheckt voor de red car)"""
     global selected_car,beweging,politie,politie_begintijd,lose,win,exit_blocked,moves_level4
-    bezet = bezette_vakjes(vehicles,selected_car)
+    bezet = bezette_vakjes(vehicles)
     collision = False
     for j in bezet:
         if j == (selected_car.x + selected_car.lengte,selected_car.y):
@@ -830,13 +762,15 @@ def beweging_right():
                 if red_car.x == (vakje_max - red_car.lengte + 1):
                     win = True
         else:
+            
             if red_car.x == (vakje_max - red_car.lengte + 1):
                 win = True
         limited_moves()
 
 def beweging_left():
+    """checkt voor collision en geen buiten-grid beweging om naar links te bewegen"""
     global selected_car,beweging,politie,politie_begintijd,lose,moves_level4
-    bezet = bezette_vakjes(vehicles,selected_car)
+    bezet = bezette_vakjes(vehicles)
     collision = False
     for j in bezet:
         if j == (selected_car.x - 1,selected_car.y):
@@ -848,8 +782,9 @@ def beweging_left():
         limited_moves()
 
 def beweging_down():
+    """checkt voor collision en geen buiten-grid beweging om naar beneden te bewegen"""
     global selected_car,beweging,politie,politie_begintijd,lose,moves_level4
-    bezet = bezette_vakjes(vehicles,selected_car)
+    bezet = bezette_vakjes(vehicles)
     collision = False
     for j in bezet:
         if j == (selected_car.x,selected_car.y + selected_car.lengte):
@@ -861,8 +796,9 @@ def beweging_down():
         limited_moves()
                 
 def beweging_up():
+    """checkt voor collision en geen buiten-grid beweging om naar boven te bewegen"""
     global selected_car,beweging,politie,politie_begintijd,lose,moves_level4
-    bezet = bezette_vakjes(vehicles,selected_car)
+    bezet = bezette_vakjes(vehicles)
     collision = False
     for j in bezet:
         if j == (selected_car.x,selected_car.y - 1):
@@ -874,6 +810,7 @@ def beweging_up():
         limited_moves()
 
 def restart_level():
+    """reset de posities van de auto's van de level als je de level reset, reset ook de timer bij level 7"""
     global timer_begin
     index = 0
     for car in levels[current_level]:
@@ -883,6 +820,7 @@ def restart_level():
         timer_begin = pygame.time.get_ticks()
         
 def next_level():
+    """gaat naar de volgende level (of eindigt de game bij laatste level (level 8)), reset de positie van de red car, en start de timer bij level 7"""
     global einde,current_level,vehicles,timer_begin
     if current_level == (aantal_levels - 1):
         einde = True
@@ -892,15 +830,15 @@ def next_level():
         red_car.x,red_car.y = 0,3 
         if current_level == 6:
             timer_begin = pygame.time.get_ticks()
-
-#functie om bepaalde states te resetten als je wint        
+       
 def reset_state_win():
+    """reset bepaalde variabelen na win"""
     global selected_car,timer_begin
     selected_car = None
     timer_begin = None
 
-#functie om bepaalde states te resetten na lose of als je een level restart
 def reset_state_lose_restart():
+    """reset bepaalde variabelen na lose of als je een level restart"""
     global selected_car,moves_level4,politie,timer_begin,beweging
     selected_car = None
     moves_level4 = 12
@@ -957,22 +895,24 @@ while running:
                 elif key == pygame.K_UP:
                     beweging_up()
             
-            #begint het spel
+            #begint het spel als je op s drukt
             if started == False:
                 if event.key == pygame.K_s:
                     started = True
                     
-            #reset de level
+            #restart de level als je op r drukt (tijdens het spel)
             if started == True and lose == False and win == False:
                 if event.key == pygame.K_r:
                     reset_state_lose_restart()
                     restart_level()
-
+                    
+            #gaat naar de volgende level na win als je op space drukt
             if win == True:
                 if event.key == pygame.K_SPACE:
                     win = False
                     next_level()
-                        
+                    
+            #restart de level na lose als je op space drukt          
             if lose == True:
                 if event.key == pygame.K_SPACE:
                     lose = False
@@ -980,7 +920,7 @@ while running:
     
     teken_background(exit_blocked)
     
-    if selected_car:
+    if selected_car: #als selected car bestaat, highlight die
         highlight_auto(selected_car)
     
     for car in vehicles:
