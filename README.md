@@ -839,12 +839,13 @@ def reset_state_win():
 
 def reset_state_lose_restart():
     """reset bepaalde variabelen na lose of als je een level restart"""
-    global selected_car,moves_level4,politie,timer_begin,beweging
+    global selected_car,moves_level4,politie,timer_begin,beweging,exit_blocked
     selected_car = None
     moves_level4 = 12
     politie = False
     timer_begin = None
     beweging = False
+    exit_blocked = False
     
 
 running = True
